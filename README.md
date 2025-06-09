@@ -7,9 +7,8 @@
 
 
 # Project Features
-- `Profissionais`: under creation
-- `Consultas`: under creation
-
+- `Profissionais`: Cadastro, listagem, edição e exclusão de profissionais
+- `Consultas`: Cadastro de consultas vinculadas ao profissional, edição de consultas e listagem de consultas por profissional.
 
 
 

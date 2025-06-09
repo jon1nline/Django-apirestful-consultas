@@ -9,5 +9,5 @@ class de_Saude(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return self.nome_social
 

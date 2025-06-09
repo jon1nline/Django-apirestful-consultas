@@ -6,6 +6,7 @@ class Consultas(models.Model):
     profissional = models.ForeignKey(
     'profissionais.De_Saude',  
     on_delete=models.CASCADE)
+    nome_social_cliente = models.CharField(max_length=100, null=False)
     comparecimento = models.BooleanField(default=False)
     
 

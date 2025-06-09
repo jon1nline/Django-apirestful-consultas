@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import CadastroProfissionais, ListarEditarExcluirProfissionais
+from .views import CadastroProfissionais, EditarExcluirProfissionais
 
 urlpatterns = [
     path('profissionais/', CadastroProfissionais.as_view(), name='profissionais-list-create'),
-    path('profissionais/<int:pk>/', ListarEditarExcluirProfissionais.as_view(), name='profissionais-retrieve-update-destroy'),
+    path('profissionais/<int:pk>/', EditarExcluirProfissionais.as_view(), name='profissionais-retrieve-update-destroy'),
 ]
