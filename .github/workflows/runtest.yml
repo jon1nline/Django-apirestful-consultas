@@ -4,8 +4,7 @@ on: [push, pull_request, workflow_call]
 jobs:
   quality-assurance:
     name: Quality Assurance
-    runs-on: ubuntu-latest  
-    container: python:3.12.11
+    runs-on: ubuntu-latest
 
     services:  
       db:
@@ -25,10 +24,12 @@ jobs:
     steps: 
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # <-- Important for pre-commit
+          fetch-depth: 0
 
-      - name: Install Git
-        run: apt-get update && apt-get install -y git
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.0.0
