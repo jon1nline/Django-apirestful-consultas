@@ -32,7 +32,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install poetry
           poetry install --no-interaction
           poetry run pre-commit install
 
