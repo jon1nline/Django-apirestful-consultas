@@ -1,4 +1,4 @@
-ame: CI/CD and deploy
+name: CI/CD and deploy
 on: [pull_request, workflow_call]
 
 jobs:
