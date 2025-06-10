@@ -1,32 +1,37 @@
-name: CI/CD and deploy
+ame: CI/CD and deploy
 on: [pull_request, workflow_call]
 
 jobs:
   quality-assurance:
-    name: quality assurance
-    runs-on: ubuntu-lastest
+    name: Quality Assurance
+    runs-on: ubuntu-latest  
     container: python:3.12.11
 
-    Serices:
+    services:  
       db:
         image: postgres:14
         env:
           POSTGRES_DB: myapp
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
+        ports:  
+          - 5432:5432
+        options: >-  
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps: 
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v4  
 
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.0.0
         with:
-        poetry-version: 1.4.2
+          poetry-version: 1.4.2  
 
       - name: Install Dependencies
         run: make install && make install-pre-commit
-
 
       - name: Lint
         run: make lint
@@ -34,8 +39,5 @@ jobs:
       - name: Test
         run: make test
         env:
-          DATABASE_HOST: db  
-
-
-
-          
+          DATABASE_HOST: localhost  
+          DATABASE_PORT: 5432
