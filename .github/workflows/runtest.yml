@@ -1,5 +1,5 @@
 name: CI/CD and deploy
-on: [pull_request, workflow_call]
+on: [push, pull_request, workflow_call]
 
 jobs:
   quality-assurance:
