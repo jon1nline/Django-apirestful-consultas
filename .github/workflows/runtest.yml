@@ -23,7 +23,9 @@ jobs:
           --health-retries 5
 
     steps: 
-      - uses: actions/checkout@v4  
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # <-- Important for pre-commit
 
       - name: Install Git
         run: apt-get update && apt-get install -y git
