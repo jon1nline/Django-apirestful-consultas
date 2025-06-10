@@ -15,26 +15,26 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
 
-steps: 
-  - uses: actions/checkout@v2
+    steps: 
+      - uses: actions/checkout@v2
 
 
-  - name: Install Poetry
-    uses: abatilo/actions-poetry@v2.0.0
-    with:
-      poetry-version: 1.4.2
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+        poetry-version: 1.4.2
 
-  - name: Install Dependencies
-    run: make install && make install-pre-commit
+      - name: Install Dependencies
+        run: make install && make install-pre-commit
 
 
-  - name: Lint
-    run: make lint
+      - name: Lint
+        run: make lint
 
-  - name: Test
-    run: make test
-    env:
-      DATABASE_HOST: db  
+      - name: Test
+        run: make test
+        env:
+          DATABASE_HOST: db  
 
 
 
