@@ -31,13 +31,17 @@ jobs:
           poetry-version: 1.4.2  
 
       - name: Install Dependencies
-        run: make install && make install-pre-commit
+        run: |
+          pip install poetry
+          poetry install --no-interaction
+          poetry run pre-commit install
 
       - name: Lint
-        run: make lint
+        run: poetry run pre-commit run --all-files
 
       - name: Test
-        run: make test
+        run: poetry run pytest tests/ --cov=myapp -v
         env:
           DATABASE_HOST: localhost  
           DATABASE_PORT: 5432
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/myapp
