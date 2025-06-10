@@ -6,7 +6,7 @@ authors = ["jon1nline <www.jhonattan@hotmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "lacreisaude" }]
-python = "^3.12"
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
