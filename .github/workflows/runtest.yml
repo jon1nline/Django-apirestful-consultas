@@ -14,9 +14,9 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_DB: lacreiapp
+          POSTGRES_DB: lacrei
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: 1234
         ports:
           - 5432:5432
         options: >-
