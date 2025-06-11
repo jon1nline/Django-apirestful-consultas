@@ -79,10 +79,10 @@ WSGI_APPLICATION = "lacreisaude.wsgi.application"
 DATABASES = {
     "default": {
          'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'myapp',
+        'NAME': 'lacreiapp',
         'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'db',  # mesmo nome do serviço no docker-compose
+        'PASSWORD': 'postgres',
+        'HOST': 'db',  
         'PORT': 5432,
     }
 }

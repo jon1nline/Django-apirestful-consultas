@@ -1,52 +1,48 @@
-name: CI/CD and deploy
-on: [push, pull_request, workflow_call]
+name: Lacrei Docker CI/CD and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+
+
 
 jobs:
-  quality-assurance:
-    name: Quality Assurance
+  test:
     runs-on: ubuntu-latest
-
-    services:  
-      db:
+    services:
+      postgres:
         image: postgres:14
         env:
-          POSTGRES_DB: myapp
+          POSTGRES_DB: lacreiapp
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports:  
-          - 5432:5432
-        options: >-  
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    steps: 
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    steps:
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.0.0
-        with:
-          poetry-version: 1.4.2  
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-django
 
-      - name: Install Dependencies
-        run: |
-          poetry install --no-interaction
-          poetry run pre-commit install
+    - name: Run migrations
+      run: |
+        python manage.py makemigrations
+        python manage.py migrate
 
-      - name: Lint
-        run: poetry run pre-commit run --all-files
-
-      - name: Test
-        run: poetry run pytest tests/ --cov=myapp -v
-        env:
-          DATABASE_HOST: localhost  
-          DATABASE_PORT: 5432
-          DATABASE_URL: postgresql://postgres:password@localhost:5432/myapp
+    - name: Run tests
+      run: |
+        python manage.py test
