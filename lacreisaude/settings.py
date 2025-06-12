@@ -79,9 +79,9 @@ WSGI_APPLICATION = "lacreisaude.wsgi.application"
 DATABASES = {
     "default": {
          'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lacrei',
+        'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': '1234',
+        'PASSWORD': 'yourpassword',
         'HOST': 'localhost',  
         'PORT': 5432,
     }
