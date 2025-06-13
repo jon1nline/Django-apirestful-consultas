@@ -1,9 +1,8 @@
-name: Lacrei Docker CI/CD and Deploy
+name: Docker CI/CD and Deploy
 
 on:
   push:
     branches: [ main ]
-
 
 
 
