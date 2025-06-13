@@ -89,27 +89,15 @@ if os.getenv('GITHUB_ACTIONS') == 'true':
             'PORT': '5432',
         }
     }
-elif os.getenv('DOCKER_ENV') == 'true' or 'runserver' in os.sys.argv:
-    # Docker container database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'postgres',
-            'HOST': 'db',
-            'PORT': 5432,
-        }
-    }
 else:
-    # Postgres Local
+    # Postgres Local:localhost / docker: db
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'lacrei',
+            'NAME': 'lacrei', #change to your db
             'USER': 'postgres',
             'PASSWORD': '1234',
-            'HOST': 'localhost',
+            'HOST': 'localhost',  #'localhost' for test or 'db' for Docker.
             'PORT': 5432,
         }
     }
