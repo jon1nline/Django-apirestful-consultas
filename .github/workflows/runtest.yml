@@ -37,7 +37,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest-django
-
+        
+    - name: Set up Docker Compose
+      run: |
+        docker-compose up -d
+        docker-compose exec -T db pg_isready -U postgres
     - name: Run migrations
       run: |
         python manage.py makemigrations
