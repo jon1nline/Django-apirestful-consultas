@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -76,16 +77,42 @@ WSGI_APPLICATION = "lacreisaude.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',  
-        'PORT': 5432,
+if os.getenv('GITHUB_ACTIONS') == 'true':
+    # GitHub Actions database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }
-}
+elif os.getenv('DOCKER_ENV') == 'true' or 'runserver' in os.sys.argv:
+    # Docker container database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
+            'HOST': 'db',
+            'PORT': 5432,
+        }
+    }
+else:
+    # Postgres Local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'lacrei',
+            'USER': 'postgres',
+            'PASSWORD': '1234',
+            'HOST': 'localhost',
+            'PORT': 5432,
+        }
+    }
 
 
 # Password validation
