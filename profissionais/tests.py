@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
 from .views import CadastroProfissionais  # Import your actual view
-from .models import de_Saude  # Import your model if needed
+from .models import Profissionais  # Import your model if needed
 
 class ProfissionalAPITestCase(TestCase):
     def setUp(self):
@@ -26,6 +26,6 @@ class ProfissionalAPITestCase(TestCase):
         response = self.view(request)
         #realiza 3 checks para saber se está tudo ok com o post.
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(de_Saude.objects.count(), 1)
-        self.assertEqual(de_Saude.objects.get().nome_social, 'enfermeiro dos testes')
+        self.assertEqual(Profissionais.objects.count(), 1)
+        self.assertEqual(Profissionais.objects.get().nome_social, 'enfermeiro dos testes')
         

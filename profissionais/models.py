@@ -1,6 +1,6 @@
 from django.db import models
 
-class de_Saude(models.Model):
+class Profissionais(models.Model):
     id = models.AutoField(primary_key=True)
     nome_social = models.CharField(max_length=100, null=False)
     profissao = models.CharField(max_length=50, null=False)

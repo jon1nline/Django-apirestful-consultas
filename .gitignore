@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ignore only migration files except for the __init__.py files
+*/migrations/*.py
+!*/migrations/__init__.py
+
 # C extensions
 *.so
 
