@@ -1,13 +1,16 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from .serializers import UserSerializer, LoginSerializer
 from .models import User
 from datetime import datetime, timezone, timedelta
+from .utils.jwt_utils import criar_token 
 import jwt
+from django.http import JsonResponse
+from django.conf import settings
 
 
 class RegistroUsuario(generics.CreateAPIView):
@@ -33,22 +36,32 @@ class LoginUsuario(generics.CreateAPIView):
                 {"detail": "e-mail ou senha invalidos"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
-        payload = {
-            'id': user.id,
-            'exp': datetime.now(timezone.utc) + timedelta(minutes=60),
-            'iat': datetime.now(timezone.utc)
-        }    
+              
 
-        token = jwt.encode(payload, 'chave_secreta', algorithm='HS256')
+        token = criar_token(user)
         
-        response = Response()
-
-        response.set_cookie(key='jwt', value=token, httponly=True)
-        response.data = {
-            'jwt': token
-        }
-        return response 
+        response = JsonResponse({'message': 'Usuário conectado.'})
+            
+            
+        response.set_cookie(
+                'access_token',
+                token['access'],
+                httponly=True,
+                secure=True,
+                samesite='Strict',
+               
+            )
+            
+        response.set_cookie(
+                'refresh_token',
+                token['refresh'],
+                httponly=True,
+                secure=True,
+                samesite='Strict',
+                max_age=604800  # dura 7 dias
+            )
+            
+        return response
         
 class UserView(APIView):
 
@@ -58,11 +71,11 @@ class UserView(APIView):
         if not token:
             raise AuthenticationFailed('O usuário precisa entrar na conta')
         try:
-            payload = jwt.decode(token,'chave_secreta',algorithms=['HS256'])
+            payload = jwt.decode(token,settings.SECRET_KEY,algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('O usuário precisa entrar na conta')
         
         user = User.objects.filter(id=payload['id']).first()
         serializer = UserSerializer(user)
-
+        
         return Response(serializer.data)
