@@ -60,6 +60,7 @@ class LoginUsuario(generics.CreateAPIView):
                 samesite='Strict',
                 max_age=604800  # dura 7 dias
             )
+
             
         return response
         
