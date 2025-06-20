@@ -1,13 +1,13 @@
 from django.db import models
 
 class AgendamentosConsultas(models.Model):
-    idConsulta = models.AutoField(primary_key=True)
-    dataConsulta = models.DateField(null=False) 
+    data_consulta = models.DateTimeField(null=False)
     profissional = models.ForeignKey(
     'profissionais.Profissionais',  
     on_delete=models.CASCADE)
     nome_social_cliente = models.CharField(max_length=100, null=False)
     comparecimento = models.BooleanField(default=False)
+    consulta_ativa = models.BooleanField(default=True)
 
 
     def __str__(self):
