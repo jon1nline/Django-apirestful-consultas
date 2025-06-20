@@ -1,7 +1,10 @@
 from django.db import models
+from django.utils import timezone
 
 class AgendamentosConsultas(models.Model):
-    data_consulta = models.DateTimeField(null=False)
+    data_consulta = models.DateTimeField(
+        null=False,
+        default=timezone.now)
     profissional = models.ForeignKey(
     'profissionais.Profissionais',  
     on_delete=models.CASCADE)
