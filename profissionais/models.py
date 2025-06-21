@@ -10,5 +10,5 @@ class Profissionais(models.Model):
 
 
     def __str__(self):
-        return self.nome_social
+        return f"Profissional:{self.nome_social} "
 
