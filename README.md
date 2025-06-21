@@ -10,14 +10,11 @@ Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profi
 ### Pré-requisitos
 
 - Docker
-- Docker Compose
 - Git
 - Python 
 - Django 
-- Django REST Framework
 - PostgreSQL
 - Poetry
-- JWT
 
 
 ### Clonando o repositório
@@ -42,7 +39,7 @@ docker-compose restart
 A aplicação estará disponível em: [http://localhost:8000](http://localhost:8000)
 
 
-###Instalação local
+### Instalação local
 ```
 
 # Instale as dependências com Poetry
@@ -143,7 +140,7 @@ curl -X POST http://localhost:8000/consultas/ \
 ## 🔐 Segurança e Validação
 
 - **Prevenção de SQL Injection** com ORM do Django
-- **Login e utilização de JWT Token para proteção de endpoints
+- **Login e utilização de JWT Token** para proteção de endpoints
 
 ---
 
