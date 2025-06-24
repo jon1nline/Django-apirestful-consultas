@@ -41,10 +41,12 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
 
       # Lint do Dockerfile
-      - name: Lint Dockerfile
+      - name: Lint Dockerfile with Hadolint
         run: |
-          docker run --rm -i hadolint/hadolint < Dockerfile
-  test:
+          docker run --rm -i hadolint/hadolint < Dockerfile 
+
+
+    test:
     runs-on: ubuntu-latest
     services:
       postgres:
