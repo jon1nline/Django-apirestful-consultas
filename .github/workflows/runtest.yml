@@ -42,7 +42,7 @@ jobs:
 
       # Lint do Dockerfile
       - name: Lint Dockerfile
-        run: run: |
+        run: |
           docker run --rm -i hadolint/hadolint < Dockerfile
   test:
     runs-on: ubuntu-latest
