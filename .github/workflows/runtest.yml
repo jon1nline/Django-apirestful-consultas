@@ -19,7 +19,7 @@ jobs:
       - name: Install security tools
         run: |
           pip install bandit safety semgrep
-          sudo apt-get install -y hadolint
+          
 
       # SAST (Análise estática de código)
       - name: Run Bandit (Python SAST)
