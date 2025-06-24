@@ -46,7 +46,7 @@ jobs:
           docker run --rm -i hadolint/hadolint < Dockerfile 
 
 
-    test:
+  test:
     runs-on: ubuntu-latest
     services:
       postgres:
