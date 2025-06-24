@@ -67,7 +67,7 @@ class LoginUsuario(generics.CreateAPIView):
 class UserView(APIView):
 
     def get(self, request):
-        token = request.COOKIES.get('jwt')
+        token = request.COOKIES.get('access_token')
 
         if not token:
             raise AuthenticationFailed('O usuário precisa entrar na conta')

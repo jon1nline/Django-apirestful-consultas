@@ -7,6 +7,45 @@ on:
 
 
 jobs:
+
+  security-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install security tools
+        run: |
+          pip install bandit safety semgrep
+          sudo apt-get install -y hadolint
+
+      # SAST (Análise estática de código)
+      - name: Run Bandit (Python SAST)
+        run: |
+          bandit -r . -ll
+
+      # verifica dependências vulneráveis
+      - name: Check dependencies with Safety
+        run: |
+          safety check
+
+      # Análise específica para Django
+      - name: Run Semgrep (Django rules)
+        run: |
+          semgrep --config=p/django
+
+      # Verificação de secrets no código
+      - name: Scan for secrets with Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+
+      # Lint do Dockerfile
+      - name: Lint Dockerfile
+        run: |
+          hadolint Dockerfile
   test:
     runs-on: ubuntu-latest
     services:

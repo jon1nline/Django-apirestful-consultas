@@ -24,7 +24,10 @@ class CadastroProfissionais(generics.ListCreateAPIView):
         payload, error = check_login(request)
         if error:
             return error        
+        
         return super().create(request, *args, **kwargs)
+        
+       
 
 class EditarExcluirProfissionais(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profissionais.objects.all()
@@ -43,7 +46,7 @@ class EditarExcluirProfissionais(generics.RetrieveUpdateDestroyAPIView):
             instance = self.get_queryset().get(pk=kwargs.get('pk'))
         except Profissionais.DoesNotExist:
             return Response(
-                {'error': 'Profissional não encontrada'},
+                {'error': 'Profissional não encontrado'},
                 status=status.HTTP_404_NOT_FOUND
             )
 

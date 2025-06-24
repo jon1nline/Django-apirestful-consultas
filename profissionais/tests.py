@@ -14,11 +14,11 @@ class ProfissionaisAPITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         
-        # Cria usuário para autenticação JWT
+        # 1. Cria o usuário de teste
         self.user = User.objects.create_user( 
             email='test@example.com',
             password='testpass123',
-            nome_social='Usuário Administrador'
+            nome_social='Usuário Teste'
         )
         
            
@@ -26,7 +26,6 @@ class ProfissionaisAPITestCase(TestCase):
         token['id'] = self.user.id  #adiciona o id pra criar o token
         
         self.client.cookies['access_token'] = str(token)
-        
         # Cria profissional de teste
         self.profissional = Profissionais.objects.create(
             nome_social="Dr. Teste",
@@ -52,6 +51,7 @@ class ProfissionaisAPITestCase(TestCase):
             data=json.dumps(self.valid_payload),
             content_type='application/json'
         )
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Profissionais.objects.count(), 2)
 
@@ -68,6 +68,24 @@ class ProfissionaisAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.profissional.refresh_from_db()
         self.assertEqual(self.profissional.profissao, 'Medico Neurologista')
+
+    def test_editar_profissional_inexistente(self):
+        profissional_id = 9999
+        url = f'{self.base_url}{profissional_id}/'
+        payload = {
+            'profissao': 'Medico Cardiologista'
+        }
+        response = self.client.patch(url, data=json.dumps(payload),
+            content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error'], 'Profissional não encontrado')  
+
+    def test_editar_profissional_dados_invalidos(self):
+        url = f'{self.base_url}{self.profissional.id}/'
+        data = {'nome_social': ''}  
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('nome_social', response.data)     
 
     def test_desativar_profissional_sem_consultas(self):
         url = f'{self.base_url}{self.profissional.id}/'
@@ -104,3 +122,20 @@ class ProfissionaisAPITestCase(TestCase):
             del self.client.cookies[cookie]  #remove os cookies de token 
         response = self.client.get(self.base_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_verificar_se_profissional_existe(self):
+        profissional_id = 9999
+        url = f'{self.base_url}{profissional_id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_criar_profissional_dados_invalidos(self):
+        invalid_payload = {
+            'nome_social': '',  # Nome vazio
+            'profissao': 'Cardiologia',
+            'endereco': 'rua dos profissionais sem nome',
+            'contato': '99888887777'
+        }
+        response = self.client.post(self.base_url, invalid_payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('nome_social', response.data)  
