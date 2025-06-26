@@ -32,6 +32,7 @@ jobs:
 
      
 
+
       - name: Lint Dockerfile with Hadolint
         run: |
           docker run --rm -i hadolint/hadolint /bin/hadolint \
