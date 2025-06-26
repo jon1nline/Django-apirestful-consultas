@@ -114,7 +114,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-    deploy-to-production:
+  deploy-to-production:
     needs: build-and-push
     runs-on: ubuntu-latest
     environment: production
