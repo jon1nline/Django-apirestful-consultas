@@ -114,24 +114,47 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  deploy-to-production:
+    deploy-to-production:
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: production # Opcional, mas recomendado para proteger o ambiente
+    environment: production
     steps:
-      - name: Deploy to Server
+      - name: Deploy to Production with Migrations
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }} 
           username: ${{ secrets.SSH_USER }} 
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
           script: |
+            # Garante que o script pare imediatamente se qualquer comando falhar
+            set -e
+
+            # 1. Puxa a imagem mais recente do Docker Hub
+            echo "====> Baixando a nova imagem..."
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
-            
+
+            # 2. Roda um container temporário APENAS para aplicar as migrações
+            #    --rm garante que o container seja removido após a execução.
+            echo "====> Executando migrações do banco de dados..."
+            docker run --rm \
+              -e POSTGRES_HOST='${{ secrets.POSTGRES_HOST }}' \
+              -e POSTGRES_PORT='${{ secrets.POSTGRES_PORT }}' \
+              -e POSTGRES_DB='${{ secrets.POSTGRES_DB }}' \
+              -e POSTGRES_USER='${{ secrets.POSTGRES_USER }}' \
+              -e POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
+              -e SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
+              -e ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}' \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }} \
+              python manage.py migrate --noinput
+
+            # 3. Para e remove o container antigo da aplicação (se existir)
+            echo "====> Reiniciando o container da aplicação..."
             docker stop lacrei-app || true
             docker rm lacrei-app || true
             
-            # Inicia o novo container passando os secrets do DB como variáveis de ambiente
+            # 4. Inicia o novo container da aplicação principal (sem rodar migrate de novo)
+            #    O CMD/ENTRYPOINT padrão do Dockerfile (que inicia o Gunicorn) será usado.
+            echo "====> Iniciando novo container da aplicação..."
             docker run -d --name lacrei-app -p 80:8000 \
               -e POSTGRES_HOST='${{ secrets.POSTGRES_HOST }}' \
               -e POSTGRES_PORT='${{ secrets.POSTGRES_PORT }}' \
@@ -139,6 +162,7 @@ jobs:
               -e POSTGRES_USER='${{ secrets.POSTGRES_USER }}' \
               -e POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
               -e SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
+              -e ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}' \
               ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
 
       - name: Post-Deploy Health Check
