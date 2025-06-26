@@ -1,3 +1,4 @@
+# .github/workflows/docker-ci-cd.yml
 name: Docker CI/CD and Deploy
 
 on:
@@ -5,7 +6,6 @@ on:
     branches: [ main ]
 
 jobs:
-
   security-checks:
     runs-on: ubuntu-latest
     steps:
@@ -20,31 +20,20 @@ jobs:
         run: |
           pip install bandit safety semgrep
           
-
-      # SAST (Análise estática de código)
       - name: Run Bandit (Python SAST)
-        run: |
-          bandit -r . -ll
+        run: bandit -r . -ll
 
-      # verifica dependências vulneráveis
       - name: Check dependencies with Safety
-        run: |
-          safety check
+        run: pip install -r requirements.txt && safety scan --full-report
 
-      # Análise específica para Django
       - name: Run Semgrep (Django rules)
-        run: |
-          semgrep --config=p/django
+        run: semgrep --config=p/django
 
-      # Verificação de secrets no código
       - name: Scan for secrets with Gitleaks
         uses: gitleaks/gitleaks-action@v2
 
-      # Lint do Dockerfile
       - name: Lint Dockerfile with Hadolint
-        run: |
-          docker run --rm -i hadolint/hadolint < Dockerfile 
-
+        run: docker run --rm -i hadolint/hadolint < Dockerfile
 
   test:
     runs-on: ubuntu-latest
@@ -62,7 +51,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
     - uses: actions/checkout@v4
 
@@ -77,31 +65,127 @@ jobs:
         pip install -r requirements.txt
         pip install pytest-django
 
-
     - name: Run migrations
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
       run: |
         python manage.py makemigrations
         python manage.py migrate
 
     - name: Run tests
-      run: |
-        python manage.py test
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: python manage.py test
 
-  docker-deploy:
-    needs: test
+  build-and-push:
+    needs: [security-checks, test]
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }} # Exporta a tag da imagem para outros jobs
     steps:
       - uses: actions/checkout@v4
       
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei
+          tags: |
+            type=sha,prefix=,format=short # Cria a tag baseada no hash do commit (ex: a1b2c3d)
+
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-to-production:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production # Opcional, mas recomendado para proteger o ambiente
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }} 
+          username: ${{ secrets.SSH_USER }} 
+          key: ${{ secrets.SSH_PRIVATE_KEY }} 
+          script: |
+            script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
+            
+            docker stop lacrei-app || true
+            docker rm lacrei-app || true
+            
+            # Inicia o novo container passando os secrets do DB como variáveis de ambiente
+            docker run -d --name lacrei-app -p 80:8000 \
+              -e POSTGRES_HOST='${{ secrets.POSTGRES_HOST }}' \
+              -e POSTGRES_PORT='${{ secrets.POSTGRES_PORT }}' \
+              -e POSTGRES_DB='${{ secrets.POSTGRES_DB }}' \
+              -e POSTGRES_USER='${{ secrets.POSTGRES_USER }}' \
+              -e POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
+              -e SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Post-Deploy Health Check
+        run: |
+          # Simula uma verificação. Se o site não retornar 200, o passo falha e aciona o rollback.
+          # Substitua 'example.com' pela URL real da sua aplicação
+          sleep 20 # Espera a aplicação iniciar
+          curl -f http://${{ secrets.SSH_HOST }} || exit 1
+
+      - name: Create GitHub Release on Success
+        # Este passo só executa se o deploy e o health check foram bem-sucedidos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ needs.build-and-push.outputs.image_tag }} \
+            --title "Release ${{ needs.build-and-push.outputs.image_tag }}" \
+            --notes "Deploy bem-sucedido para produção."
+
+  automatic-rollback:
+    if: failure() && github.ref == 'refs/heads/main' # Só executa em falha na branch main
+    needs: deploy-to-production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Last Successful Release Tag
+        id: get_tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Pega a tag da ÚLTIMA release bem-sucedida (a segunda na lista, já que a primeira seria a falha se tivesse sido criada)
+          LAST_GOOD_TAG=$(gh release list --limit 2 --json tagName --jq '.[1].tagName')
+          if [ -z "$LAST_GOOD_TAG" ]; then
+            echo "Nenhuma release anterior encontrada para o rollback."
+            exit 1
+          fi
+          echo "tag_to_rollback=$LAST_GOOD_TAG" >> $GITHUB_ENV
+
+      - name: Perform Rollback
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🚨 DEPLOY FALHOU! Iniciando rollback para a versão ${{ env.tag_to_rollback }} 🚨"
+            
+            # Puxa a imagem estável anterior
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ env.tag_to_rollback }}
+            
+            # Para e remove o container com falha
+            docker stop lacrei-app || true
+            docker rm lacrei-app || true
+            
+            # Inicia o container com a versão estável
+            docker run -d --name lacrei-app -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ env.tag_to_rollback }}
