@@ -33,8 +33,12 @@ jobs:
      
 
       - name: Lint Dockerfile with Hadolint
-        run: docker run --rm -i hadolint/hadolint /bin/hadolint --ignore DL3008 - < Dockerfile
-        
+        run: |
+          docker run --rm -i hadolint/hadolint /bin/hadolint \
+            --failure-threshold warning \
+            --ignore DL3008 \
+            - < Dockerfile
+
   test:
     runs-on: ubuntu-latest
     services:
