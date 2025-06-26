@@ -37,7 +37,7 @@ urlpatterns = [
     path('', include('profissionais.urls')),
     path('', include('consultas.urls')),
     path('users/', include ('users.urls')),
-    path('docs/', schema_view.with_ui('swagger', cache_timeout=0)),
+    path('', schema_view.with_ui('swagger', cache_timeout=0)),
     path('', include('django_prometheus.urls')),
 
 ]
