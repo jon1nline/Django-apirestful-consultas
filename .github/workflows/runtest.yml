@@ -126,7 +126,6 @@ jobs:
           username: ${{ secrets.SSH_USER }} 
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
           script: |
-            script: |
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
             
             docker stop lacrei-app || true
