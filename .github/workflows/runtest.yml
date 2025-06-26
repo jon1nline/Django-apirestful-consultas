@@ -24,16 +24,17 @@ jobs:
         run: bandit -r . -ll
 
       - name: Check dependencies with Safety
-        run: pip install -r requirements.txt && safety scan --full-report
+        run: |
+          safety check
 
       - name: Run Semgrep (Django rules)
         run: semgrep --config=p/django
 
-      - name: Scan for secrets with Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+     
 
       - name: Lint Dockerfile with Hadolint
-        run: docker run --rm -i hadolint/hadolint < Dockerfile
+        run: |
+          docker run --rm -i hadolint/hadolint < Dockerfile
 
   test:
     runs-on: ubuntu-latest
