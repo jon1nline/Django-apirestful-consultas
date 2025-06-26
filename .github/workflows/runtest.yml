@@ -118,10 +118,12 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     environment: production
+    permissions:      # <-- ADICIONE ESTE BLOCO
+      contents: write
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-        
+
       - name: Deploy to Production with Migrations
         uses: appleboy/ssh-action@master
         with:
