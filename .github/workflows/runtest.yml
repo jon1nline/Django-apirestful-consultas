@@ -119,6 +119,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        
       - name: Deploy to Production with Migrations
         uses: appleboy/ssh-action@master
         with:
