@@ -83,30 +83,16 @@ WSGI_APPLICATION = "lacreisaude.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.getenv('GITHUB_ACTIONS') == 'true':
-    # GitHub Actions database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': os.environ.get('POSTGRES_HOST'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
-else:
-    # Postgres Local:localhost / docker: db
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'lacrei', #change to your db
-            'USER': 'postgres',
-            'PASSWORD': '1234',
-            'HOST': 'localhost',  #'localhost' for test or 'db' for Docker.
-            'PORT': 5432,
-        }
-    }
+}
 
 
 # Password validation
