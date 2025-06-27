@@ -1,9 +1,8 @@
 # 📊 API de Gestão de Profissionais da Saúde e Consultas Médicas
 
-Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profissionais da saúde e suas consultas médicas. Desenvolvido com **Django + Django REST Framework**, utiliza **PostgreSQL**, **Poetry**, **Docker**, **JWT** e **GitHub Actions** para CI/CD.
+Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profissionais da saúde e suas consultas médicas. Desenvolvido com **Django + Django REST Framework**, utiliza **PostgreSQL**, **Poetry**, **Docker**, **JWT** e **GitHub Actions** para CI/CD e **AWS** para o deploy na nuvem.
 
 ---
-
 
 ## ⚙️ Setup do Ambientes
 
@@ -15,7 +14,6 @@ Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profi
 - Django 
 - PostgreSQL
 - Poetry
-
 
 ### Clonando o repositório
 
@@ -38,10 +36,8 @@ docker-compose restart
 ```
 A aplicação estará disponível em: [http://localhost:8000](http://localhost:8000)
 
-
 ### Instalação local
 ```
-
 # Instale as dependências com Poetry
 poetry install
 
@@ -62,7 +58,6 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-
 ## 🧪 Rodando os Testes
 
 ### Usando Docker
@@ -74,17 +69,12 @@ docker-compose up --build
 ### testando localmente (sem Docker)
 
 ```
-`python manage.py test`
+python manage.py test
 ```
 
 Todos os testes utilizam `APITestCase` do `rest_framework.test`.
 
 ---
-
-
-
----
-
 
 ## 🚀 Endpoints da API
 
@@ -94,48 +84,38 @@ Documentação completa disponível em:
 
 | Método | Endpoint                            | Descrição                        		|
 | ------ | ------------------------------------| -----------------------------------------------|
-| GET    | `/docs/`                   	       | Documentação da aplicação com SwaggerUI  	|
 | GET    | `/profissionais/`                   | Lista todos os profissionais     		|
 | POST   | `/profissionais/`                   | Cadastra um novo profissional    		|
 | PUT    | `/profissionais/<id>/`              | Edita um profissional existente  		|
 | DELETE | `/profissionais/<id>/`              | Remove um profissional           		|
-| GET    | /`consultas/`                       | Lista todos as consulta          		|
-| POST   | `/consultas/`                       | Cadastra uma nova uma consulta   		|
+| GET    | `/consultas/`                       | Lista todas as consultas          		|
+| POST   | `/consultas/`                       | Cadastra uma nova consulta   			|
 | GET    | `/api/consultas/profissional/<id>`  | Lista consultas por profissional 		|
-| POST   | `/users/register/`  		       | registro de novos usuários 	  		|
-| POST   | `/users/login/`  		       | login para gerar o token de uso  dos endpoints |
-| GET    | `/users/users`		       | lista todos os usuários cadastrados  		|
----
+| POST   | `/users/register/`  		       | Registro de novos usuários 	  		|
+| POST   | `/users/login/`  		       | Login para gerar o token JWT     	        |
+| GET    | `/users/users`		       | Lista todos os usuários cadastrados		|
 
+---
 
 ## 🚀 Uso da API
 
 - **Autenticação**
 ```
 # Registrar novo usuário
-curl -X POST http://localhost:8000/users/register/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "novousuario@novousuario.com", "password": "senhasegura123"}'
+curl -X POST http://localhost:8000/users/register/   -H "Content-Type: application/json"   -d '{"email": "novousuario@novousuario.com", "password": "senhasegura123"}'
 
 # Login (obter token JWT)
-curl -X POST http://localhost:8000/users/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "novousuario@novousuario.com", "password": "senhasegura123"}'
+curl -X POST http://localhost:8000/users/login/   -H "Content-Type: application/json"   -d '{"email": "novousuario@novousuario.com", "password": "senhasegura123"}'
 ```
 
 - **Exemplo de uso**
 ```
 # Listar profissionais (com autenticação)
-curl -X GET http://localhost:8000/profissionais/ \
-  -H "Authorization: Bearer seu_token_jwt_aqui"
+curl -X GET http://localhost:8000/profissionais/   -H "Authorization: Bearer seu_token_jwt_aqui"
 
 # Agendar consulta
-curl -X POST http://localhost:8000/consultas/ \
-  -H "Authorization: Bearer seu_token_jwt_aqui" \
-  -H "Content-Type: application/json" \
-  -d '{"profissional": 1, "nome_social_cliente": "João Silva", "data_consulta": "2023-12-15 14:30"}'
+curl -X POST http://localhost:8000/consultas/   -H "Authorization: Bearer seu_token_jwt_aqui"   -H "Content-Type: application/json"   -d '{"profissional": 1, "nome_social_cliente": "João Silva", "data_consulta": "2023-12-15 14:30"}'
 ```
-
 
 ## 🔐 Segurança e Validação
 
@@ -152,6 +132,7 @@ curl -X POST http://localhost:8000/consultas/ \
 - **PostgreSQL** pela confiabilidade e suporte ao Django.
 - **JWT** para segurança dos endpoints da aplicação.
 - **GitHub Actions** para garantir CI/CD automatizado com execução de testes e deploy automatizado para produção.
+- **AWS** para deploy automático na instancia EC2
 
 ---
 
@@ -162,88 +143,54 @@ curl -X POST http://localhost:8000/consultas/ \
 - **GitHub Actions** com workflow para:
   - Lint e testes unitários a cada push
   - Build e push da imagem Docker para Docker Hub
-  - Deploy automático para servidor de staging/produção
+  - Deploy automático para servidor de staging/produção via VPS ou AWS EC2
 
-### Ambiente de Produção
+### 🚀 Deploy Automatizado na AWS (EC2)
 
-- VPS Linux (Ubuntu)
-- Docker e docker-compose instalados
-- Banco de dados PostgreSQL em container separado
-- Scripts automatizados de deploy via SSH
+A aplicação pode ser implantada automaticamente em uma instância EC2 da AWS, utilizando **Docker** e **GitHub Actions** com **SSH Deploy**.
+
+#### Pré-requisitos:
+
+- Instância EC2 (Linux Ubuntu) configurada e com Docker instalado
+- Chave SSH configurada nos **Secrets do GitHub** (`EC2_HOST`, `EC2_USER`, `EC2_KEY`)
+- Repositório com workflow GitHub Actions configurado
+
+#### Variáveis de ambiente necessárias no GitHub Secrets:
+
+| Nome                 | Descrição                                     |
+|----------------------|-----------------------------------------------|
+| `SSH_HOST`           | Endereço IP público da instância EC2          |
+| `SSH_USER`           | Usuário SSH (ex: `ubuntu`)                    |
+| `SSH_PRIVATE_KEY`    | Chave privada `.pem` convertida em string     |
+| `DOCKER_HUB_USERNAME`| Usuário do Docker Hub                         |
+| `DOCKER_HUB_TOKEN`   | Token de acesso ao Docker Hub                 |
+| `POSTGRES_DB`        | Nome do banco de dados                        |
+| `POSTGRES_HOST`      | host do banco de dados (ex:127.0.0.)          |
+| `POSTGRES_PASSWORD`  | senha do banco de dados                       |
+| `POSTGRES_PORT`      | porta do banco de dados(padrão:5432)          |
+
+#### Exemplo de trecho do Workflow GitHub Actions (com deploy para EC2):
 
 ```yaml
-# Exemplo do CI no GitHub Actions
-name: Docker CI/CD and Deploy
-
-on:
-  push:
-    branches: [ main ]
-
-
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest-django
-
-
-    - name: Run migrations
-      run: |
-        python manage.py makemigrations
-        python manage.py migrate
-
-    - name: Run tests
-      run: |
-        python manage.py test
-
-  docker-deploy:
-    needs: test
+  deploy-aws:
+    needs: docker-deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/hubname:latest
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/hubname:latest
+            docker stop app || true && docker rm app || true
+            docker run -d --name app -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/hubname:latest
 ```
 
 ---
+
+[DEPLOY NA AWS](http://18.223.159.22/) <- disponível nesse link
 
 ## 🪲 Erros Encontrados e Soluções
 
@@ -252,6 +199,8 @@ jobs:
 | Erro de conexão de PostgreSQL no Docker               | Ajustado o `dockercompose` e `settings`                              |
 | Utilização do JWT Token e Token Refresh               | Utilização de PyJWT e rest framework simplejwt para ajustes	       |
 | Testes e deploy no GitHub Actions                     | Diversas correções e commits até chegar no resultado final           |
+| Testes e deploy na instancia EC2                      | Diversas correções e commits até que o deploy fosse automatizado     |
+
 
 ---
 
@@ -260,12 +209,12 @@ jobs:
 - ~~Adição de autenticação com JWT (Token baseado)~~ --já adicionado
 - ~~Permissões customizadas para edição e exclusão~~ -- somente usuários cadastrados podem fazer alterações.
 - ~~Paginação e filtros mais robustos nos endpoints~~ --já adicionado no endpoint consultas por profissionais.
-- Deploy via AWS
+- ~~Deploy na AWS~~ disponível em: http://18.223.159.22/
+- Integração com API Asaas - Em processo.
 
 ---
 
 ## 🧑‍💻 Autor
 
-Desenvolvido por [Jon1nline]\
-[LinkedIn](https://https://www.linkedin.com/in/jhonattan-gomes) | [GitHub](https://github.com/jon1nline)
-
+Desenvolvido por [Jon1nline]  
+[LinkedIn](https://www.linkedin.com/in/jhonattan-gomes) | [GitHub](https://github.com/jon1nline)
