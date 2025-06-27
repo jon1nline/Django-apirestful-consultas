@@ -179,9 +179,9 @@ A aplicação pode ser implantada automaticamente em uma instância EC2 da AWS, 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/hubname:latest
             docker stop app || true && docker rm app || true
