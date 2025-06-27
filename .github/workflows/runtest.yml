@@ -37,7 +37,6 @@ jobs:
         run: |
           docker run --rm -i hadolint/hadolint /bin/hadolint \
             --failure-threshold warning \
-            --ignore DL3008 \
             - < Dockerfile
 
   test:

@@ -27,7 +27,7 @@ SECRET_KEY = "sua chave aqui"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['18.223.159.22','ec2-18-223-159-22.us-east-2.compute.amazonaws.com']
+ALLOWED_HOSTS = ['18.223.159.22','ec2-18-223-159-22.us-east-2.compute.amazonaws.com','127.0.0.1']
 
 
 # Application definition

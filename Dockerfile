@@ -5,7 +5,10 @@ FROM python:3.12.11
 WORKDIR /code
 
 # 3. Instala dependências do sistema necessárias para o PostgreSQL funcionar com Python
-RUN apt-get update && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client=15+248 \
+    curl=7.88.1-10+deb12u5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # 4. Copia o arquivo de dependências para o container
 COPY requirements.txt .
