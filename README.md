@@ -5,7 +5,7 @@ Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profi
 ---
 
 
-## ⚙️ Setup do Ambiente
+## ⚙️ Setup do Ambientes
 
 ### Pré-requisitos
 
