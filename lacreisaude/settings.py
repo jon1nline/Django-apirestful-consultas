@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "profissionais",
     "consultas",
     "users",
+    "clientes",
     "django_prometheus",
 ]
 

@@ -82,18 +82,21 @@ Documentação completa disponível em:
 
 - **Endpoints principais**:
 
-| Método | Endpoint                            | Descrição                        		|
-| ------ | ------------------------------------| -----------------------------------------------|
-| GET    | `/profissionais/`                   | Lista todos os profissionais     		|
-| POST   | `/profissionais/`                   | Cadastra um novo profissional    		|
-| PUT    | `/profissionais/<id>/`              | Edita um profissional existente  		|
-| DELETE | `/profissionais/<id>/`              | Remove um profissional           		|
-| GET    | `/consultas/`                       | Lista todas as consultas          		|
-| POST   | `/consultas/`                       | Cadastra uma nova consulta   			|
-| GET    | `/api/consultas/profissional/<id>`  | Lista consultas por profissional 		|
-| POST   | `/users/register/`  		       | Registro de novos usuários 	  		|
-| POST   | `/users/login/`  		       | Login para gerar o token JWT     	        |
-| GET    | `/users/users`		       | Lista todos os usuários cadastrados		|
+| Método | Endpoint                            | Descrição                        			|
+| ------ | ------------------------------------| -------------------------------------------------------|
+| GET    | `/profissionais/`                   | Lista todos os profissionais     			|
+| POST   | `/profissionais/`                   | Cadastra um novo profissional    			|
+| PUT    | `/profissionais/<id>/`              | Edita um profissional existente  			|
+| DELETE | `/profissionais/<id>/`              | Remove um profissional           			|
+| GET    | `/consultas/`                       | Lista todas as consultas          			|
+| POST   | `/consultas/`                       | Cadastra uma nova consulta   				|
+| GET    | `/api/consultas/profissional/<id>/` | Lista consultas por profissional 			|
+| POST   | `/users/register/`  		       | Registro de novos usuários 	  			|
+| POST   | `/users/login/`  		       | Login para gerar o token JWT     	        	|
+| GET    | `/users/users/`		       | Lista todos os usuários cadastrados			|
+| POST   | `/clients/cadastro/`  	       | Cadastra um novo cliente   	  	        	|
+| GET    | `/clients/cadastro/`		       | Lista todos os clientes cadastrados			|
+| PATCH  | `/clients/consultas/<id>/`	       | endpoint especifico para implementação Asaas		|
 
 ---
 

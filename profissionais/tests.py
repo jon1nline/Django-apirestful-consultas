@@ -7,6 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 from .models import Profissionais
+from clientes.models import CadastroClientes
 
 User = get_user_model()
 
@@ -26,12 +27,26 @@ class ProfissionaisAPITestCase(TestCase):
         token['id'] = self.user.id  #adiciona o id pra criar o token
         
         self.client.cookies['access_token'] = str(token)
+
+        self.cliente = CadastroClientes.objects.create(
+            nome_social = 'cliente primario',
+            cpf = '12345678900',
+            email = 'email@cliente.com',
+            contato = '11222223333',
+            logradouro = 'alameda dos clientes',
+            numero = '11',
+            complemento = 'apartamento 02',
+            bairro = 'saude',
+            cep = '11222333',
+        )
+
         # Cria profissional de teste
         self.profissional = Profissionais.objects.create(
             nome_social="Dr. Teste",
             profissao="Médico",
             endereco="alameda dos testes",
             contato="99888887777",
+            preco_consulta=80,
             ativo=True
         )
         
@@ -40,6 +55,7 @@ class ProfissionaisAPITestCase(TestCase):
             'profissao': 'Médico',
             'endereco': 'alameda das mudanças, 32',
             'contato': '11222223333',
+            'preco_consulta':80,
             'ativo': True
         }
         
@@ -100,7 +116,8 @@ class ProfissionaisAPITestCase(TestCase):
         AgendamentosConsultas.objects.create(
             profissional=self.profissional,
             data_consulta=timezone.now() + timedelta(days=1),
-            nome_social_cliente="Paciente Teste",
+            cliente_id=self.cliente.id,
+            status_consulta = 'agendado',
             consulta_ativa=True
         )
         
@@ -134,7 +151,8 @@ class ProfissionaisAPITestCase(TestCase):
             'nome_social': '',  # Nome vazio
             'profissao': 'Cardiologia',
             'endereco': 'rua dos profissionais sem nome',
-            'contato': '99888887777'
+            'contato': '99888887777',
+            'preco_consulta': 80
         }
         response = self.client.post(self.base_url, invalid_payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

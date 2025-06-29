@@ -8,10 +8,17 @@ class AgendamentosConsultas(models.Model):
     profissional = models.ForeignKey(
     'profissionais.Profissionais',  
     on_delete=models.CASCADE)
-    nome_social_cliente = models.CharField(max_length=100, null=False)
-    comparecimento = models.BooleanField(default=False)
+    cliente = models.ForeignKey(
+    'clientes.CadastroClientes',  
+    on_delete=models.CASCADE)
+    status_consulta = models.CharField(max_length=20, choices=(
+        ('agendada', 'Agendada'),
+        ('confirmada', 'Confirmada'),
+        ('cancelada', 'Cancelada'),
+        ('completa', 'Realizada'),
+    ))
     consulta_ativa = models.BooleanField(default=True)
 
 
     def __str__(self):
-        return f"Data da consulta:{self.dataConsulta} Profissional{self.profissional}"
+        return f"Data da consulta:{self.data_consulta} Profissional{self.profissional}"

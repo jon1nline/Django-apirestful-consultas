@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import generics, status
 from .models import AgendamentosConsultas
+from profissionais.models import Profissionais
+from clientes.models import PagamentoConsultas, CadastroClientes
 from .serializers import SerializerConsultas
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -30,6 +32,13 @@ class CadastroConsultas(generics.ListCreateAPIView):
 
         data_agendamento = request.data.get('data_consulta') 
         profissional_id = request.data.get('profissional') 
+        cliente_id = request.data.get('cliente')
+
+        if not cliente_id:
+            return Response(
+                        {"erro": "O cliente não foi encontrado nos registros."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
         if not profissional_id:
             return Response(
@@ -84,10 +93,59 @@ class CadastroConsultas(generics.ListCreateAPIView):
                         data_consulta=agendamento_dt,
                         profissional_id=profissional_id,
                         consulta_ativa=True
-                    ).update(consulta_ativa=False)
+                    ).update(consulta_ativa=False,status_consulta='canceled')
              
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == status.HTTP_201_CREATED:
+            nova_consulta_id = response.data['id']
+            
+            try:
+                nova_consulta_instance = AgendamentosConsultas.objects.get(id=nova_consulta_id)
+            except AgendamentosConsultas.DoesNotExist:
+                # Se a consulta não for encontrada, ele irá apresentar o erro.
+                return Response(
+                    {"erro": "Falha ao encontrar a consulta recém-criada para gerar o pagamento."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
-        return super().create(request, *args, **kwargs)
+            # Get additional data for the payment from the request
+            metodo_pagamento = 'pix' # Provide a default
+            preco_consulta = None
+
+            try: 
+                cliente_instance = CadastroClientes.objects.get(id=cliente_id)
+
+            except CadastroClientes.DoesNotExist:
+                return Response(
+                    {"erro": "O cliente associado não foi encontrado."},
+                    status=status.HTTP_404_NOT_FOUND    
+                )
+            try:
+                profissional = Profissionais.objects.get(id=profissional_id)
+                preco_consulta = profissional.preco_consulta
+            except Profissionais.DoesNotExist:
+                return Response(
+                    {"erro": "O profissional associado não foi encontrado para determinar o preço."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            if preco_consulta is None or preco_consulta < 0:
+                 return Response(
+                    {"erro": "O profissional não tem um preço de consulta válido configurado."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        
+
+            # Create the PagamentoDeConsulta instance
+            PagamentoConsultas.objects.create(
+                cliente=cliente_instance,
+                consulta=nova_consulta_instance,
+                metodo_de_pagamento=metodo_pagamento,
+                preco_consulta=preco_consulta,
+                status_pagamento='pendente'  # Set the initial status
+            )
+        return response
 
     
 
@@ -113,6 +171,7 @@ class EditarConsultas(generics.RetrieveUpdateDestroyAPIView):
     
     def patch(self, request, *args, **kwargs): #editar consultas
         data_agendamento = request.data.get('data_consulta')
+        status_consulta = request.data.get('status_consulta')
         payload, error = check_login(request)
 
         if error:
@@ -139,7 +198,24 @@ class EditarConsultas(generics.RetrieveUpdateDestroyAPIView):
                 return Response(
                     {"erro": "Formato de data inválido."},
                     status=status.HTTP_400_BAD_REQUEST
-                ) 
+                )
+        if 'status_consulta' in request.data and status_consulta not in ['cancelada', 'agendada', 'confirmada', 'completa']:
+            return Response(
+                        {"erro": "O status da consulta informado não existe."},
+                        status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        #logica para desativar a consulta completamente se for marcada como cancelada.
+        if 'status_consulta' in request.data and (status_consulta == 'cancelada'):
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(consulta_ativa=False)
+        else:
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(consulta_ativa=True)
+
+
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)

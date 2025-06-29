@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from .models import AgendamentosConsultas
 from profissionais.models import Profissionais
+from clientes.models import CadastroClientes
 
 import json
 
@@ -31,6 +32,19 @@ class CadastroConsultasTestCase(TestCase):
         
         self.client.cookies['access_token'] = str(token)
 
+        #cria o cliente para testes
+        self.cliente = CadastroClientes.objects.create(
+            nome_social = 'cliente primario',
+            cpf = '12345678900',
+            email = 'email@cliente.com',
+            contato = '11222223333',
+            logradouro = 'alameda dos clientes',
+            numero = '11',
+            complemento = 'apartamento 02',
+            bairro = 'saude',
+            cep = '11222333',
+        )
+
         #cria o profissional para realizar os testes
         self.profissional = Profissionais.objects.create(
             nome_social="Dr. Teste",
@@ -43,7 +57,8 @@ class CadastroConsultasTestCase(TestCase):
         self.valid_payload = {
             'profissional': self.profissional.id,
             'data_consulta': (timezone.now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
-            'nome_social_cliente': 'Paciente Teste'
+            'cliente': self.cliente.id,
+            'status_consulta':'agendada',
         }
 
 
@@ -119,7 +134,7 @@ class CadastroConsultasTestCase(TestCase):
         payload = {
         'profissional': self.profissional.id,
         'data_consulta': 'data-invalida',
-        'nome_paciente': ''
+        'cliente': self.cliente.id,
         }
         response = self.client.post(
             self.url,
@@ -146,6 +161,19 @@ class EditarConsultasTestCase(TestCase):
         
         self.client.cookies['access_token'] = str(token)
 
+        #cria o cliente para testes
+        self.cliente = CadastroClientes.objects.create(
+            nome_social = 'cliente primario',
+            cpf = '12345678900',
+            email = 'email@cliente.com',
+            contato = '11222223333',
+            logradouro = 'alameda dos clientes',
+            numero = '11',
+            complemento = 'apartamento 02',
+            bairro = 'saude',
+            cep = '11222333',
+        )
+
         self.profissional = Profissionais.objects.create(
             nome_social="Dr. Teste",
             profissao="Médico",
@@ -156,25 +184,55 @@ class EditarConsultasTestCase(TestCase):
         self.consulta = AgendamentosConsultas.objects.create(
             profissional=self.profissional,
             data_consulta=timezone.now() + timedelta(days=1),
-            nome_social_cliente="Paciente Teste",
+            cliente_id =self.cliente.id,
+            status_consulta = 'agendada',
             consulta_ativa=True
         )
         self.url = f'/consultas/{self.consulta.id}/'
         
         
 
-    def test_editar_consulta_sucesso(self):
+    def test_editar_cliente_com_sucesso(self):
+
+        dados_consulta = {
+        'profissional': self.consulta.profissional.id,
+        'data_consulta': self.consulta.data_consulta.isoformat(),
+        'consulta_ativa': self.consulta.consulta_ativa,
+        'status_consulta': self.consulta.status_consulta
+    }
         payload = {
-            'nome_social_cliente': 'Novo Nome do Paciente'
+            "nome_social": "string",
+            "cpf": "string",
+            "email": "user@example.com",
+            "contato": "string",
+            "logradouro": "string",
+            "numero": "strin",
+            "complemento": "string",
+            "bairro": "string",
+            "cep": "string"
         }
-        response = self.client.patch(
-            self.url,
+        response = self.client.post(
+            '/clients/cadastro/',
             data=json.dumps(payload),
             content_type='application/json'
         )
+        self.assertEqual(response.status_code, 201) #confirma que o novo cliente foi criado.
+        new_client_id = response.json()['id']
+        
+        update_payload = {
+        'cliente': new_client_id  
+    }
+        response = self.client.patch(
+            self.url,
+            data=json.dumps(update_payload),
+            content_type='application/json'
+        )
+    
         self.assertEqual(response.status_code, 200)
         self.consulta.refresh_from_db()
-        self.assertEqual(self.consulta.nome_social_cliente, 'Novo Nome do Paciente')
+    
+    # Compara se o id está igual depois da edição
+        self.assertEqual(self.consulta.cliente.id, new_client_id)
 
     def test_editar_consulta_inexistente(self):
         url = '/api/consultas/9999/'  # ID inexistente
@@ -228,6 +286,18 @@ class ConsultasPorProfissionalTestCase(TestCase):
         
         self.client.cookies['access_token'] = str(token)
 
+        self.cliente = CadastroClientes.objects.create(
+            nome_social = 'cliente primario',
+            cpf = '12345678900',
+            email = 'email@cliente.com',
+            contato = '11222223333',
+            logradouro = 'alameda dos clientes',
+            numero = '11',
+            complemento = 'apartamento 02',
+            bairro = 'saude',
+            cep = '11222333',
+        )
+
         self.profissional = Profissionais.objects.create(
             nome_social="Dr. Ativo",
             profissao="Médico",
@@ -247,20 +317,23 @@ class ConsultasPorProfissionalTestCase(TestCase):
         AgendamentosConsultas.objects.create(
             profissional=self.profissional,
             data_consulta=timezone.now() + timedelta(days=1),
-            nome_social_cliente="Paciente 1",
+            cliente = self.cliente,
+            status_consulta = 'agendada',
             consulta_ativa=True
         )
         AgendamentosConsultas.objects.create(
             profissional=self.profissional,
             data_consulta=timezone.now() + timedelta(days=2),
-            nome_social_cliente="Paciente 2",
+            cliente = self.cliente,
+            status_consulta = 'confirmada',
             consulta_ativa=True
         )
         # Consulta inativa não deve aparecer
         AgendamentosConsultas.objects.create(
             profissional=self.profissional,
             data_consulta=timezone.now() + timedelta(days=3),
-            nome_social_cliente="Paciente 3",
+            cliente = self.cliente,
+            status_consulta = 'cancelada',
             consulta_ativa=False,
         )
         

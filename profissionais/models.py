@@ -6,6 +6,7 @@ class Profissionais(models.Model):
     profissao = models.CharField(max_length=50, null=False)
     endereco =  models.CharField(max_length=200, null=False)   
     contato = models.CharField(max_length=11, null=False)
+    preco_consulta= models.IntegerField(default=80)
     ativo = models.BooleanField(default=True)
 
 
