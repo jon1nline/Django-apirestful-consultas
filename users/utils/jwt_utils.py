@@ -91,14 +91,14 @@ def verificar_token_cookies(request):
                 key='access_token',
                 value=new_tokens['access'],
                 httponly=True,
-                secure=not settings.DEBUG,
+                secure=False,
                 samesite='Lax'
             )
             response.set_cookie(
                 key='refresh_token',
                 value=new_tokens['refresh'],
                 httponly=True,
-                secure=not settings.DEBUG,
+                secure=False,
                 samesite='Lax'
             )
             return user, response

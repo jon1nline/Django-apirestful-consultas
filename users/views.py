@@ -47,8 +47,8 @@ class LoginUsuario(generics.CreateAPIView):
                 'access_token',
                 token['access'],
                 httponly=True,
-                secure=True,
-                samesite='Strict',
+                secure=False,      
+                samesite='Lax',
                
             )
             
@@ -56,8 +56,8 @@ class LoginUsuario(generics.CreateAPIView):
                 'refresh_token',
                 token['refresh'],
                 httponly=True,
-                secure=True,
-                samesite='Strict',
+                secure=False,      
+                samesite='Lax',
                 max_age=604800  # dura 7 dias
             )
 
