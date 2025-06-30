@@ -99,7 +99,7 @@ def verificar_token_cookies(request):
                 value=new_tokens['refresh'],
                 httponly=True,
                 secure=False,
-                samesite='Lax'
+                samesite='Lax',
             )
             return user, response
 
