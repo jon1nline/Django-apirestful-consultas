@@ -1,8 +1,31 @@
 # 📊 API de Gestão de Profissionais da Saúde e Consultas Médicas
 
-Este projeto é uma API RESTful para cadastro, gerenciamento e consulta de profissionais da saúde e suas consultas médicas. Desenvolvido com **Django + Django REST Framework**, utiliza **PostgreSQL**, **Poetry**, **Docker**, **JWT** e **GitHub Actions** para CI/CD e **AWS** para o deploy na nuvem.
+Este projeto é uma **API RESTful** completa para cadastro, agendamento, gerenciamento e pagamentos de consultas médicas. A solução inclui um **CRUD** de profissionais, agendamento de consultas e uma integração robusta com a **Asaas** para processamento de pagamentos.
+
+Desenvolvido com **Django** + **Django REST Framework**, utiliza **PostgreSQL** para o banco de dados, **Poetry** para gerenciamento de dependências, e é totalmente containerizado com **Docker**. O fluxo de **CI/CD** é automatizado com GitHub Actions para testes e deploy na nuvem **AWS**.
 
 ---
+
+# ✨ Principais Funcionalidades
+
+*CRUD de Profissionais*: Cadastro, visualização, atualização e remoção de profissionais da saúde.
+
+*Gerenciamento de Consultas*: Agendamento e listagem de consultas por data ou profissional.
+
+*Gerenciamento de Clientes*: Cadastro de novos clientes e listagem de todos os clientes cadastrados.
+
+*Autenticação e Autorização*: Sistema de registro e login de usuários com tokens JWT, protegendo os endpoints.
+
+*Integração de Pagamentos com Asaas:*
+
+Criação de clientes na plataforma Asaas: Ao cadastrar um novo cliente, os dados são automaticamente enviados para o cadastro no sistema Asaas
+
+Geração de cobranças (PIX, boleto, cartão) para as consultas: Ao registrar novas consultas, automaticamente é criado o registo de pagamento no sistema Asaas.
+
+Recebimento de atualizações de status de pagamento via webhooks: Ao pagamento ser registrado, o sistema Asaas envia um webhook a API para que haja a atualização do status do pagamento e da consulta.
+
+**CI/CD**: Pipeline automatizado para testes e deploy contínuo na AWS.
+
 
 ## ⚙️ Setup do Ambientes
 
@@ -82,21 +105,21 @@ Documentação completa disponível em:
 
 - **Endpoints principais**:
 
-| Método | Endpoint                            | Descrição                        			|
-| ------ | ------------------------------------| -------------------------------------------------------|
-| GET    | `/profissionais/`                   | Lista todos os profissionais     			|
-| POST   | `/profissionais/`                   | Cadastra um novo profissional    			|
-| PUT    | `/profissionais/<id>/`              | Edita um profissional existente  			|
-| DELETE | `/profissionais/<id>/`              | Remove um profissional           			|
-| GET    | `/consultas/`                       | Lista todas as consultas          			|
-| POST   | `/consultas/`                       | Cadastra uma nova consulta   				|
-| GET    | `/api/consultas/profissional/<id>/` | Lista consultas por profissional 			|
-| POST   | `/users/register/`  		       | Registro de novos usuários 	  			|
-| POST   | `/users/login/`  		       | Login para gerar o token JWT     	        	|
-| GET    | `/users/users/`		       | Lista todos os usuários cadastrados			|
-| POST   | `/clients/cadastro/`  	       | Cadastra um novo cliente   	  	        	|
-| GET    | `/clients/cadastro/`		       | Lista todos os clientes cadastrados			|
-| PATCH  | `/clients/consultas/<id>/`	       | endpoint especifico para implementação Asaas		|
+| Método | Endpoint                            		 | Descrição                        					|
+| ------ | --------------------------------------------- | ---------------------------------------------------------------------|
+| GET    | `/profissionais/`                   		 | Lista todos os profissionais     					|
+| POST   | `/profissionais/`                   		 | Cadastra um novo profissional    					|
+| PUT    | `/profissionais/<id>/`              		 | Edita um profissional existente  					|
+| DELETE | `/profissionais/<id>/`              		 | Remove um profissional           					|
+| GET    | `/consultas/`                       		 | Lista todas as consultas          					|
+| POST   | `/consultas/`                       		 | Cadastra uma nova consulta   					|
+| GET    | `/api/consultas/profissional/<id>/` 		 | Lista consultas por profissional 					|
+| POST   | `/users/register/`  		       		 | Registro de novos usuários 	  					|
+| POST   | `/users/login/`  		       		 | Login para gerar o token JWT     	        			|
+| GET    | `/users/users/`		       		 | Lista todos os usuários cadastrados					|
+| POST   | `/clients/cadastro/`  	      		 | Cadastra um novo cliente   	  	        			|
+| GET    | `/clients/cadastro/`		       		 | Lista todos os clientes cadastrados					|
+| PATCH  | `/clients/consultas/gerenciarpagamento/`	 | endpoint especifico Asaas para receber confirmação de pagamento	|
 
 ---
 
@@ -117,7 +140,7 @@ curl -X POST http://localhost:8000/users/login/   -H "Content-Type: application/
 curl -X GET http://localhost:8000/profissionais/   -H "Authorization: Bearer seu_token_jwt_aqui"
 
 # Agendar consulta
-curl -X POST http://localhost:8000/consultas/   -H "Authorization: Bearer seu_token_jwt_aqui"   -H "Content-Type: application/json"   -d '{"profissional": 1, "nome_social_cliente": "João Silva", "data_consulta": "2023-12-15 14:30"}'
+curl -X POST http://localhost:8000/consultas/   -H "Authorization: Bearer seu_token_jwt_aqui"   -H "Content-Type: application/json"   -d '{"profissional": 1, "cliente": "1", "data_consulta": "2023-12-15 14:30", "metodo_pagamento": "PIX"}'
 ```
 
 ## 🔐 Segurança e Validação
@@ -139,18 +162,18 @@ curl -X POST http://localhost:8000/consultas/   -H "Authorization: Bearer seu_to
 
 ---
 
-## ⚙️ CI/CD e Deploy
 
-### Ferramentas Utilizadas
+### 🚀 CI/CD e Deploy na AWS (EC2)
 
-- **GitHub Actions** com workflow para:
-  - Lint e testes unitários a cada push
-  - Build e push da imagem Docker para Docker Hub
-  - Deploy automático para servidor de staging/produção via VPS ou AWS EC2
+1. O fluxo de CI/CD é configurado para, a cada push na branch main:
 
-### 🚀 Deploy Automatizado na AWS (EC2)
+2. Executar testes e lint.
 
-A aplicação pode ser implantada automaticamente em uma instância EC2 da AWS, utilizando **Docker** e **GitHub Actions** com **SSH Deploy**.
+3. Construir uma nova imagem Docker.
+
+4. Enviar a imagem para o Docker Hub.
+
+5. Conectar-se via SSH à instância EC2 e realizar o deploy da nova versão.
 
 #### Pré-requisitos:
 
@@ -160,17 +183,20 @@ A aplicação pode ser implantada automaticamente em uma instância EC2 da AWS, 
 
 #### Variáveis de ambiente necessárias no GitHub Secrets:
 
-| Nome                 | Descrição                                     |
-|----------------------|-----------------------------------------------|
-| `SSH_HOST`           | Endereço IP público da instância EC2          |
-| `SSH_USER`           | Usuário SSH (ex: `ubuntu`)                    |
-| `SSH_PRIVATE_KEY`    | Chave privada `.pem` convertida em string     |
-| `DOCKER_HUB_USERNAME`| Usuário do Docker Hub                         |
-| `DOCKER_HUB_TOKEN`   | Token de acesso ao Docker Hub                 |
-| `POSTGRES_DB`        | Nome do banco de dados                        |
-| `POSTGRES_HOST`      | host do banco de dados (ex:127.0.0.)          |
-| `POSTGRES_PASSWORD`  | senha do banco de dados                       |
-| `POSTGRES_PORT`      | porta do banco de dados(padrão:5432)          |
+| Nome                 | Descrição                                         |
+|----------------------|---------------------------------------------------|
+| `SSH_HOST`           | Endereço IP público da instância EC2              |
+| `SSH_USER`           | Usuário SSH (ex: `ubuntu`)                        |
+| `SSH_PRIVATE_KEY`    | Chave privada `.pem` convertida em string         |
+| `DOCKER_HUB_USERNAME`| Usuário do Docker Hub                             |
+| `DOCKER_HUB_TOKEN`   | Token de acesso ao Docker Hub                     |
+| `POSTGRES_DB`        | Nome do banco de dados                            |
+| `POSTGRES_HOST`      | host do banco de dados (ex:127.0.0.)              |
+| `POSTGRES_PASSWORD`  | senha do banco de dados                           |
+| `POSTGRES_PORT`      | porta do banco de dados(padrão:5432)          	   |
+| `ASAAS_ACCESS_TOKEN  | coloque a chave Asaas para integração      	   |
+| `ASAAS_WEBHOOK_TOKEN`| essa chave deve ser a mesma inserida nos webhooks |
+
 
 #### Exemplo de trecho do Workflow GitHub Actions (com deploy para EC2):
 
@@ -213,7 +239,7 @@ A aplicação pode ser implantada automaticamente em uma instância EC2 da AWS, 
 - ~~Permissões customizadas para edição e exclusão~~ -- somente usuários cadastrados podem fazer alterações.
 - ~~Paginação e filtros mais robustos nos endpoints~~ --já adicionado no endpoint consultas por profissionais.
 - ~~Deploy na AWS~~ disponível em: http://18.223.159.22/
-- Integração com API Asaas - Em processo.
+- ~~Integração com API Asaas~~ integração concluída com sucesso.
 
 ---
 
