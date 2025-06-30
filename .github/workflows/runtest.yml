@@ -147,7 +147,6 @@ jobs:
               -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
               -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
               -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
-              -e ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" \
               -e ASAAS_ACCESS_TOKEN="${{ secrets.ASAAS_ACCESS_TOKEN }}" \ 
               -e ASAAS_WEBHOOK_TOKEN="${{ secrets.ASAAS_WEBHOOK_TOKEN }}" \
               ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }} \
