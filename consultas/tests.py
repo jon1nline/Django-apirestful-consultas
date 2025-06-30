@@ -59,6 +59,7 @@ class CadastroConsultasTestCase(TestCase):
             'data_consulta': (timezone.now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
             'cliente': self.cliente.id,
             'status_consulta':'agendada',
+            'metodo_pagamento': 'pix'
         }
 
 

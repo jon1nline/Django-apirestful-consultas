@@ -63,7 +63,7 @@ class CadastroClientesCreate(generics.ListCreateAPIView):
         }
 
         try:
-            asaas_response = requests.post(url_asaas, json=asaas_payload, headers=headers)
+            asaas_response = requests.post(url_asaas, json=asaas_payload, headers=headers, timeout=15)
             
             #Verifica se o cliente foi criado com sucesso no Asaas
             if asaas_response.status_code == 200:

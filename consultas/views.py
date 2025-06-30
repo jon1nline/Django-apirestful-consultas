@@ -216,7 +216,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
 
     # --- EXECUÇÃO DA CHAMADA À API ---
         try:
-            response = requests.post(url_asaas, json=asaas_payload, headers=headers)
+            response = requests.post(url_asaas, json=asaas_payload, headers=headers, timeout=15)
             response.raise_for_status()  # Lança uma exceção para erros HTTP (4xx ou 5xx)
             
             #salva o id do novo pagamento registrado
