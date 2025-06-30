@@ -28,7 +28,7 @@ if IS_PRODUCTION:
     def get_secret_from_ssm(parameter_name):
         try:
             # Lembre-se de configurar a região correta aqui ou nas variáveis de ambiente da AWS
-            ssm_client = boto3.client('ssm', region_name='sa-east-1') 
+            ssm_client = boto3.client('ssm', region_name='us-east-2a') 
             response = ssm_client.get_parameter(
                 Name=parameter_name,
                 WithDecryption=True
