@@ -141,14 +141,13 @@ jobs:
             #    --rm garante que o container seja removido após a execução.
             echo "====> Executando migrações do banco de dados..."
             docker run --rm \
-              -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
-              -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}" \
-              -e POSTGRES_DB="${{ secrets.POSTGRES_DB }}" \
-              -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
-              -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
-              -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
-              -e ASAAS_ACCESS_TOKEN="${{ secrets.ASAAS_ACCESS_TOKEN }}" \ 
-              -e ASAAS_WEBHOOK_TOKEN="${{ secrets.ASAAS_WEBHOOK_TOKEN }}" \
+              -e POSTGRES_HOST='${{ secrets.POSTGRES_HOST }}' \
+              -e POSTGRES_PORT='${{ secrets.POSTGRES_PORT }}' \
+              -e POSTGRES_DB='${{ secrets.POSTGRES_DB }}' \
+              -e POSTGRES_USER='${{ secrets.POSTGRES_USER }}' \
+              -e POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
+              -e SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
+              -e ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}' \
               ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }} \
               python manage.py migrate --noinput
 
@@ -168,8 +167,6 @@ jobs:
               -e POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
               -e SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
               -e ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}' \
-              -e ASAAS_ACCESS_TOKEN='${{ secrets.ASAAS_ACCESS_TOKEN }}' \    
-              -e ASAAS_WEBHOOK_TOKEN='${{ secrets.ASAAS_WEBHOOK_TOKEN }}' \ 
               ${{ secrets.DOCKER_HUB_USERNAME }}/lacrei:${{ needs.build-and-push.outputs.image_tag }}
 
       - name: Post-Deploy Health Check
