@@ -41,7 +41,7 @@ if IS_PRODUCTION:
 
     # Busca cada segredo usando os nomes que definimos no Passo 1
     ASAAS_ACCESS_TOKEN = get_secret_from_ssm('/minha-aplicacao/producao/ASAAS_ACCESS_TOKEN')
-    TOKEN_ASAAS_ACESSO_API = get_secret_from_ssm('/minha-aplicacao/producao/ASAAS_WEBHOOK_TOKEN')
+    TOKEN_ASAAS_ACESSO_API = get_secret_from_ssm("/minha-aplicacao/producao/ASAAS_WEBHOOK_TOKEN")
 
 else:
     print("Ambiente de desenvolvimento detectado. Carregando segredos do .env ou variáveis locais.")
