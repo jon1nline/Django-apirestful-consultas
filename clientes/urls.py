@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import CadastroClientes, GerenciarPagamento
+from .views import CadastroClientesCreate, GerenciarPagamento
 
 
 urlpatterns = [
-    path('cadastro/', CadastroClientes.as_view(), name='clientes-list-create'),
-    path('consultas/<int:pk>/', GerenciarPagamento.as_view(), name='gerenciar-pagamento-detail'),
+    path('cadastro/', CadastroClientesCreate.as_view(), name='clientes-list-create'),
+    path('consultas/gerenciarpagamento/', GerenciarPagamento.as_view(), name='gerenciar-pagamento-detail'),
 ]
