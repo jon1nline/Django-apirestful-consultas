@@ -6,7 +6,7 @@ Desenvolvido com **Django** + **Django REST Framework**, utiliza **PostgreSQL** 
 
 ---
 
-# ✨ Principais Funcionalidades
+## ✨ Principais Funcionalidades
 
 *CRUD de Profissionais*: Cadastro, visualização, atualização e remoção de profissionais da saúde.
 
@@ -194,7 +194,7 @@ curl -X POST http://localhost:8000/consultas/   -H "Authorization: Bearer seu_to
 | `POSTGRES_HOST`      | host do banco de dados (ex:127.0.0.)              |
 | `POSTGRES_PASSWORD`  | senha do banco de dados                           |
 | `POSTGRES_PORT`      | porta do banco de dados(padrão:5432)          	   |
-| `ASAAS_ACCESS_TOKEN  | coloque a chave Asaas para integração      	   |
+| `ASAAS_ACCESS_TOKEN` | coloque a chave Asaas para integração      	   |
 | `ASAAS_WEBHOOK_TOKEN`| essa chave deve ser a mesma inserida nos webhooks |
 
 

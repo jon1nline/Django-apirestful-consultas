@@ -1,9 +1,15 @@
 from django.db import models
+from .validador_cpf import validar_cpf
 
 
 class CadastroClientes(models.Model):
     nome_social = models.CharField(max_length=100,null=False)
-    cpf = models.CharField(max_length=11,null=False,unique=True)
+    cpf = models.CharField(
+        max_length=14,
+        validators=[validar_cpf],
+        unique=True,
+        help_text='Pode ser digitado com ou sem pontuação.'
+    )
     email = models.EmailField(unique=True)
     contato = models.CharField(max_length=11)
     logradouro = models.CharField(max_length=200)

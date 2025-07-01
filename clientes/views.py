@@ -1,17 +1,23 @@
 from django.shortcuts import render
 from django.conf import settings
 from .models import CadastroClientes, PagamentoConsultas
-from .serializers import SerializerCadastroClientes, SerializerPagamentos
+from .serializers import SerializerCadastroClientes
 from consultas.views import check_login
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from consultas.models import AgendamentosConsultas
-import requests, json, os
+from .validador_cpf import validar_cpf
+import requests, json, os, logging, sys
 
 asaas_token = settings.ASAAS_ACCESS_TOKEN
 url_asaas = "https://api-sandbox.asaas.com/v3/customers"
 webhook_token = settings.TOKEN_ASAAS_ACESSO_API
+
+logging.basicConfig(
+    level=logging.DEBUG,  # Captura logs a partir do nível DEBUG
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout  # Direciona a saída para stdout
+)
 
 class CadastroClientesCreate(generics.ListCreateAPIView):
     queryset = CadastroClientes.objects.all()
@@ -19,6 +25,7 @@ class CadastroClientesCreate(generics.ListCreateAPIView):
     
     def list(self, request, *args, **kwargs):
         #verifica se o usuario está autenticado para exibir os profissionais.
+        
         payload, error = check_login(request)
         if error:
             return error
@@ -96,6 +103,9 @@ class GerenciarPagamento(APIView):
     def post(self, request, *args, **kwargs):
         #SEGURANÇA: Validar o token do webhook vindo do header
         sent_token = request.headers.get("Asaas-Access-Token")
+        logging.debug(sent_token)
+        logging.debug(request)
+        logging.debug(webhook_token)
         if not sent_token or sent_token != webhook_token:
             print("Webhook recebido com token inválido ou ausente.")
             return Response({"error": "Acesso não autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
