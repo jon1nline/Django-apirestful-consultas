@@ -104,7 +104,7 @@ class GerenciarPagamento(APIView):
         #SEGURANÇA: Validar o token do webhook vindo do header
         sent_token = request.headers.get("Asaas-Access-Token")
         logging.debug(sent_token)
-        logging.debug(request)
+        logging.debug(request.data)
         logging.debug(webhook_token)
         if not sent_token or sent_token != webhook_token:
             print("Webhook recebido com token inválido ou ausente.")
