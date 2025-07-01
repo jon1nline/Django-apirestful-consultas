@@ -103,9 +103,8 @@ class GerenciarPagamento(APIView):
     def post(self, request, *args, **kwargs):
         #SEGURANÇA: Validar o token do webhook vindo do header
         sent_token = request.headers.get("Asaas-Access-Token")
-        logging.debug(sent_token)
-        logging.debug(request.headers.data)
-        logging.debug(webhook_token)
+        logging.debug(f"{sent_token} token enviado pelo asaas")
+        logging.debug(f"{webhook_token} token salvo no docker")
         if not sent_token or sent_token != webhook_token:
             print("Webhook recebido com token inválido ou ausente.")
             return Response({"error": "Acesso não autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
