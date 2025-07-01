@@ -40,13 +40,13 @@ class CadastroClientesCreate(generics.ListCreateAPIView):
         if response.status_code == status.HTTP_201_CREATED:
            novo_cliente_data = response.data
            self.registrar_cliente_no_asaas(novo_cliente_data)
-           print(f"Cliente {novo_cliente_data.get('id')} registrado com sucesso.")
+           logging.debug(f"Cliente {novo_cliente_data.get('id')} registrado com sucesso.")
 
         return response
     def registrar_cliente_no_asaas(self, cliente_data):
     
         if not asaas_token:
-            print("ERRO: A variável de ambiente ASAAS_ACCESS_TOKEN não está configurada.")
+            logging.debug("ERRO: A variável de ambiente ASAAS_ACCESS_TOKEN não está configurada.")
             return
 
         # 5. Mapeia os campos do seu modelo para os campos esperados pela API do Asaas
@@ -74,7 +74,7 @@ class CadastroClientesCreate(generics.ListCreateAPIView):
             
             #Verifica se o cliente foi criado com sucesso no Asaas
             if asaas_response.status_code == 200:
-                print(f"Cliente {cliente_data.get('id')} registrado com sucesso no Asaas.")
+                logging.debug(f"Cliente {cliente_data.get('id')} registrado com sucesso no Asaas.")
                 asaas_data = asaas_response.json()
                 asaas_customer_id = asaas_data.get('id')
                 
@@ -82,18 +82,18 @@ class CadastroClientesCreate(generics.ListCreateAPIView):
                     cliente_local = CadastroClientes.objects.get(id=cliente_data.get('id'))
                     cliente_local.asaas_customer_id = asaas_customer_id
                     cliente_local.save(update_fields=['asaas_customer_id'])
-                    print(f"ID do Asaas '{asaas_customer_id}' associado ao cliente local.")
+                    logging.debug(f"ID do Asaas '{asaas_customer_id}' associado ao cliente local.")
                 except CadastroClientes.DoesNotExist:
-                    print(f"ERRO: Não foi possível encontrar o cliente local com id {cliente_data.get('id')} para salvar o ID do Asaas.")
+                    logging.debug(f"ERRO: Não foi possível encontrar o cliente local com id {cliente_data.get('id')} para salvar o ID do Asaas.")
                 
             else:
                 # Se der erro, imprima o status e a mensagem de erro do Asaas
-                print(f"ERRO ao registrar cliente no Asaas. Status: {asaas_response.status_code}")
-                print(f"Resposta do Asaas: {asaas_response.text}")
+                logging.debug(f"ERRO ao registrar cliente no Asaas. Status: {asaas_response.status_code}")
+                logging.debug(f"Resposta do Asaas: {asaas_response.text}")
 
         except requests.exceptions.RequestException as e:
             # Erro de conexão com a API do Asaas
-            print(f"ERRO de conexão com a API do Asaas: {e}")
+            logging.debug(f"ERRO de conexão com a API do Asaas: {e}")
 
 class GerenciarPagamento(APIView):
     authentication_classes = []
@@ -103,10 +103,8 @@ class GerenciarPagamento(APIView):
     def post(self, request, *args, **kwargs):
         #SEGURANÇA: Validar o token do webhook vindo do header
         sent_token = request.headers.get("Asaas-Access-Token")
-        logging.debug(f"{sent_token} token enviado pelo asaas")
-        logging.debug(f"{webhook_token} token salvo no docker")
         if not sent_token or sent_token != webhook_token:
-            print("Webhook recebido com token inválido ou ausente.")
+            logging.debug("Webhook recebido com token inválido ou ausente.")
             return Response({"error": "Acesso não autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
 
         #EXTRAIR OS DADOS DO PAYLOAD DO WEBHOOK
@@ -114,7 +112,7 @@ class GerenciarPagamento(APIView):
         event_type = payload.get("event")
         payment_data = payload.get("payment", {})
         
-        print(f"Webhook recebido! Evento: {event_type}")
+        logging.debug(f"Webhook recebido! Evento: {event_type}")
 
         #VERIFICAR O TIPO DE EVENTO
         # Processamos apenas quando o pagamento é confirmado ou recebido
@@ -128,7 +126,7 @@ class GerenciarPagamento(APIView):
             try:
                 pagamento_consulta = PagamentoConsultas.objects.get(asaas_payment_id=asaas_payment_id)
             except PagamentoConsultas.DoesNotExist:
-                print(f"ERRO: Pagamento com ID Asaas {asaas_payment_id} não encontrado no nosso sistema.")
+                logging.debug(f"ERRO: Pagamento com ID Asaas {asaas_payment_id} não encontrado no nosso sistema.")
                 # Retornamos 200 OK mesmo assim para que o Asaas não tente reenviar o webhook
                 return Response({"status": "Pagamento não encontrado, ignorando"}, status=status.HTTP_200_OK)
 
@@ -136,7 +134,7 @@ class GerenciarPagamento(APIView):
             # Atualiza o status do pagamento para 'pago'
             pagamento_consulta.status_pagamento = 'pago'
             pagamento_consulta.save()
-            print(f"Pagamento {pagamento_consulta.id} atualizado para PAGO.")
+            logging.debug(f"Pagamento {pagamento_consulta.id} atualizado para PAGO.")
 
             #Atualiza o status da consulta para 'confirmada'
             try:
@@ -144,13 +142,13 @@ class GerenciarPagamento(APIView):
                 if agendamento:
                     agendamento.status_consulta = 'confirmada'
                     agendamento.save()
-                    print(f"Agendamento {agendamento.id} atualizado para CONFIRMADA.")
+                    logging.debug(f"Agendamento {agendamento.id} atualizado para CONFIRMADA.")
             except Exception as e:
-                print(f"Erro ao tentar atualizar o agendamento relacionado: {e}")
+                logging.debug(f"Erro ao tentar atualizar o agendamento relacionado: {e}")
                 # Não para o processo, apenas registra o erro
         
         else:
-            print(f"Evento '{event_type}' não relevante, ignorando.")
+            logging.debug(f"Evento '{event_type}' não relevante, ignorando.")
 
         # 6. RESPONDER AO ASAAS COM 200 OK
         # É CRÍTICO retornar 200 para o Asaas saber que você recebeu o webhook com sucesso.

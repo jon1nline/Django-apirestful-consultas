@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from users.utils.jwt_utils import verificar_token_cookies
 from datetime import datetime
-import os, requests, json
+import os, requests, json, logging, sys
 
 asaas_token = settings.ASAAS_ACCESS_TOKEN
 url_asaas = "https://api-sandbox.asaas.com/v3/payments"
@@ -40,14 +40,14 @@ class CadastroConsultas(generics.ListCreateAPIView):
         cliente_id = request.data.get('cliente')
 
         if not cliente_id:
-            print(f'O cliente {cliente_id} não foi encontrado nos registros')
+            logging.debug(f'O cliente {cliente_id} não foi encontrado nos registros')
             return Response(
                         {"erro": "O cliente não foi encontrado nos registros."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
         if not profissional_id:
-            print(f'O profissional {profissional_id} não foi encontrado nos registros')
+            logging.debug(f'O profissional {profissional_id} não foi encontrado nos registros')
             return Response(
                         {"erro": "O profissional não foi encontrado nos registros."},
                         status=status.HTTP_400_BAD_REQUEST
@@ -60,13 +60,13 @@ class CadastroConsultas(generics.ListCreateAPIView):
                 agendamento_dt = timezone.make_aware(datetime.strptime(data_agendamento, '%Y-%m-%d %H:%M')) 
                 
                 if agendamento_dt <= timezone.now():
-                    print('O agendamento da consulta não foi possivel. Data ou Horário está no passado')
+                    logging.debug('O agendamento da consulta não foi possivel. Data ou Horário está no passado')
                     return Response(
                         {"erro": "Não é possível agendar consultas em datas ou horários passados."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except ValueError:
-                print('Formato da data está errado. Não foi possível agendar a consulta.')
+                logging.debug('Formato da data está errado. Não foi possível agendar a consulta.')
                 return Response(
                     {"erro": "Formato de data inválido."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -84,7 +84,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
                 substituir = str(request.data.get('substituir', '')).lower() == 'true'
                 
                 if not substituir:
-                    print(f'O profissional {profissional_id} Possui outra consulta para o horário e data mencionados.')
+                    logging.debug(f'O profissional {profissional_id} Possui outra consulta para o horário e data mencionados.')
                     return Response(
                         {
                             "erro": "Este profissional já possui uma consulta agendada para este horário.",
@@ -98,7 +98,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
                         status=status.HTTP_409_CONFLICT
                     )
                 else:
-                     print('A consulta médica foi substituida.') 
+                     logging.debug('A consulta médica foi substituida.') 
                     # inativa a consulta existente antes de criar a nova
                      AgendamentosConsultas.objects.filter(
                         data_consulta=agendamento_dt,
@@ -114,7 +114,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
                 nova_consulta_instance = AgendamentosConsultas.objects.get(id=nova_consulta_id)
             except AgendamentosConsultas.DoesNotExist:
                 # Se a consulta não for encontrada, ele irá apresentar o erro.
-                print(f'A consulta {nova_consulta_id} não foi encontrada para gerar o pagamento.')
+                logging.debug(f'A consulta {nova_consulta_id} não foi encontrada para gerar o pagamento.')
                 return Response(
                     {"erro": "Falha ao encontrar a consulta recém-criada para gerar o pagamento."},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -124,14 +124,14 @@ class CadastroConsultas(generics.ListCreateAPIView):
             metodo_pagamento = request.data.get('metodo_pagamento') 
             preco_consulta = None
             if not metodo_pagamento:
-                print('metodo de pagamento não encontrado.')
+                logging.debug('metodo de pagamento não encontrado.')
                 return Response(
                     {"erro": "Inclua o campo 'metodo_pagamento':'pix,boleto ou credit_card'"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             metodos_validos = ['pix', 'boleto', 'credit_card'] # Exemplo
             if metodo_pagamento not in metodos_validos:
-                print('o metodo de pagamento digitado é inválido.')
+                logging.debug('o metodo de pagamento digitado é inválido.')
                 return Response(
                     {"erro": f"Método de pagamento '{metodo_pagamento}' é inválido."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -141,7 +141,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
                 cliente_instance = CadastroClientes.objects.get(id=cliente_id)
 
             except CadastroClientes.DoesNotExist:
-                print(f'A cliente {cliente_instance} não foi encontrado e o pagamento não foi gerado.')
+                logging.debug(f'A cliente {cliente_instance} não foi encontrado e o pagamento não foi gerado.')
                 return Response(
                     {"erro": "O cliente associado não foi encontrado."},
                     status=status.HTTP_404_NOT_FOUND    
@@ -150,14 +150,14 @@ class CadastroConsultas(generics.ListCreateAPIView):
                 profissional = Profissionais.objects.get(id=profissional_id)
                 preco_consulta = profissional.preco_consulta
             except Profissionais.DoesNotExist:
-                print(f'O profissional {profissional_id} não foi encontrado e por isso o preço da consulta não pode ser determinado.')
+                logging.debug(f'O profissional {profissional_id} não foi encontrado e por isso o preço da consulta não pode ser determinado.')
                 return Response(
                     {"erro": "O profissional associado não foi encontrado para determinar o preço."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
             if preco_consulta is None or preco_consulta < 0:
-                 print(f'O profissional {profissional_id} precisa ter um preço válido de consulta.')
+                 logging.debug(f'O profissional {profissional_id} precisa ter um preço válido de consulta.')
                  return Response(
                     {"erro": "O profissional não tem um preço de consulta válido configurado."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -181,7 +181,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
     def registrar_pagamento_no_asaas(self, pagamento_data):
     
         if not asaas_token:
-            print("ERRO: A variável de ambiente ASAAS_ACCESS_TOKEN não está configurada.")
+            logging.debug("ERRO: A variável de ambiente ASAAS_ACCESS_TOKEN não está configurada.")
             return 
         
         try:
@@ -190,12 +190,12 @@ class CadastroConsultas(generics.ListCreateAPIView):
         
         # Verifica se o ID do cliente no Asaas realmente existe
             if not id_cliente_asaas:
-                print(f"ERRO: O cliente {pagamento_data.cliente.id} não possui um asaas_customer_id registrado.")
+                logging.debug(f"ERRO: O cliente {pagamento_data.cliente.id} não possui um asaas_customer_id registrado.")
                 return
 
         except AttributeError:
         # Este erro acontece se pagamento_data.cliente for None ou se o campo não existir
-            print("ERRO: Não foi possível encontrar o cliente associado a este pagamento.")
+            logging.debug("ERRO: Não foi possível encontrar o cliente associado a este pagamento.")
             return
 
         asaas_payload = {
@@ -212,7 +212,7 @@ class CadastroConsultas(generics.ListCreateAPIView):
             "content-type": "application/json",
             "access_token": asaas_token
         }
-        print("Enviando para o Asaas o payload:", asaas_payload)
+        logging.debug("Enviando para o Asaas o payload:", asaas_payload)
 
     # --- EXECUÇÃO DA CHAMADA À API ---
         try:
@@ -226,23 +226,23 @@ class CadastroConsultas(generics.ListCreateAPIView):
             pagamento_data.save()
 
         except requests.exceptions.RequestException as e:
-            print(f"ERRO DE CONEXÃO: Falha ao se comunicar com a API do Asaas. Erro: {e}")
+            logging.debug(f"ERRO DE CONEXÃO: Falha ao se comunicar com a API do Asaas. Erro: {e}")
             return None
         
     # --- TRATAMENTO DA RESPOSTA ---
         response_data = response.json()
-        print("Resposta do Asaas:", response_data)
+        logging.debug("Resposta do Asaas:", response_data)
 
     # Verifica se a cobrança foi criada com sucesso
         if response.status_code == 200:
-            print("Pagamento criado com sucesso no Asaas!")
+            logging.debug("Pagamento criado com sucesso no Asaas!")
         
         
         else:
         # Se a resposta não for a esperada
-            print(f"ERRO: O Asaas retornou um status inesperado ou um erro.")
-            print(f"Status Code: {response.status_code}")
-            print(f"Resposta: {response_data}")
+            logging.debug(f"ERRO: O Asaas retornou um status inesperado ou um erro.")
+            logging.debug(f"Status Code: {response.status_code}")
+            logging.debug(f"Resposta: {response_data}")
         return None 
     
 
@@ -277,7 +277,7 @@ class EditarConsultas(generics.RetrieveUpdateDestroyAPIView):
         try:
             instance = self.get_queryset().get(pk=kwargs.get('pk'))
         except AgendamentosConsultas.DoesNotExist:
-            print('a consulta informada para edição não existe.')
+            logging.debug('a consulta informada para edição não existe.')
             return Response(
                 {'error': 'Consulta não encontrada'},
                 status=status.HTTP_404_NOT_FOUND
@@ -288,19 +288,19 @@ class EditarConsultas(generics.RetrieveUpdateDestroyAPIView):
                 agendamento_dt = timezone.make_aware(datetime.strptime(data_agendamento, '%Y-%m-%d %H:%M')) 
                 
                 if agendamento_dt <= timezone.now():
-                    print('Não é possivel editar consultas em datas ou horários passados.')
+                    logging.debug('Não é possivel editar consultas em datas ou horários passados.')
                     return Response(
                         {"erro": "Não é possível alterar a consulta com data ou horário passado."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except ValueError:
-                print('a data informada está no formato inválido.')
+                logging.debug('a data informada está no formato inválido.')
                 return Response(
                     {"erro": "Formato de data inválido."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         if 'status_consulta' in request.data and status_consulta not in ['cancelada', 'agendada', 'confirmada', 'completa']:
-            print(f'o status da consulta /{status_consulta}/ não existe no sistema.')
+            logging.debug(f'o status da consulta /{status_consulta}/ não existe no sistema.')
             return Response(
                         {"erro": "O status da consulta informado não existe."},
                         status=status.HTTP_400_BAD_REQUEST
@@ -311,7 +311,7 @@ class EditarConsultas(generics.RetrieveUpdateDestroyAPIView):
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save(consulta_ativa=False)
-            print('a consulta foi desativada com sucesso.')
+            logging.debug('a consulta foi desativada com sucesso.')
 
         else:
             serializer = self.get_serializer(instance, data=request.data, partial=True)
@@ -347,7 +347,7 @@ class ConsultasPorProfissional(generics.ListAPIView):
 
         # 3. Check de existencia do profissional
         if not queryset.exists():
-            print('o profissional informado não está cadastrado.')
+            logging.debug('o profissional informado não está cadastrado.')
             return Response(
                 {'error': 'Profissional não encontrado'},
                 status=status.HTTP_404_NOT_FOUND

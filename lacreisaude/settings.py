@@ -19,35 +19,9 @@ import boto3
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-IS_PRODUCTION = os.getenv('ENV_TYPE') == 'production'
 
-if IS_PRODUCTION:
-    print("Ambiente de produção detectado. Carregando segredos da AWS...")
-
-    # Função auxiliar para buscar segredos do SSM
-    def get_secret_from_ssm(parameter_name):
-        try:
-            # Lembre-se de configurar a região correta aqui ou nas variáveis de ambiente da AWS
-            ssm_client = boto3.client('ssm', region_name='us-east-2a') 
-            response = ssm_client.get_parameter(
-                Name=parameter_name,
-                WithDecryption=True
-            )
-            return response['Parameter']['Value']
-        except Exception as e:
-            print(f"ERRO CRÍTICO: Não foi possível carregar o segredo '{parameter_name}' da AWS. Erro: {e}")
-            # Em um cenário real, você poderia fazer o sistema falhar aqui para evitar operar sem chaves
-            return None
-
-    # Busca cada segredo usando os nomes que definimos no Passo 1
-    ASAAS_ACCESS_TOKEN = get_secret_from_ssm('/minha-aplicacao/producao/ASAAS_ACCESS_TOKEN')
-    TOKEN_ASAAS_ACESSO_API = get_secret_from_ssm("/minha-aplicacao/producao/ASAAS_WEBHOOK_TOKEN")
-
-else:
-    print("Ambiente de desenvolvimento detectado. Carregando segredos do .env ou variáveis locais.")
-    # Lógica para desenvolvimento (continua como estava)
-    ASAAS_ACCESS_TOKEN = os.getenv('ASAAS_ACCESS_TOKEN')
-    TOKEN_ASAAS_ACESSO_API = os.getenv('TOKEN_ASAAS_ACESSO_API')
+ASAAS_ACCESS_TOKEN = os.getenv('ASAAS_ACCESS_TOKEN')
+TOKEN_ASAAS_ACESSO_API = os.getenv('ASAAS_WEBHOOK_TOKEN')
 
 
 
