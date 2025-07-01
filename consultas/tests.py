@@ -165,7 +165,7 @@ class EditarConsultasTestCase(TestCase):
         #cria o cliente para testes
         self.cliente = CadastroClientes.objects.create(
             nome_social = 'cliente primario',
-            cpf = '12345678900',
+            cpf = '13678982000',
             email = 'email@cliente.com',
             contato = '11222223333',
             logradouro = 'alameda dos clientes',
@@ -193,24 +193,19 @@ class EditarConsultasTestCase(TestCase):
         
         
 
-    def test_editar_cliente_com_sucesso(self):
+    def test_editar_consulta_com_sucesso(self):
 
-        dados_consulta = {
-        'profissional': self.consulta.profissional.id,
-        'data_consulta': self.consulta.data_consulta.isoformat(),
-        'consulta_ativa': self.consulta.consulta_ativa,
-        'status_consulta': self.consulta.status_consulta
-    }
         payload = {
             "nome_social": "string",
-            "cpf": "string",
-            "email": "user@example.com",
+            "cpf": "28044466037",
+            "email": "testador@testes.test",
             "contato": "string",
             "logradouro": "string",
             "numero": "strin",
             "complemento": "string",
             "bairro": "string",
-            "cep": "string"
+            "cep": "string",
+            "asaas_customer_id": "string"
         }
         response = self.client.post(
             '/clients/cadastro/',

@@ -19,7 +19,7 @@ class CadastroClientesTests(TestCase):
         self.base_url = '/clients/cadastro/'
         self.valid_payload = {
             "nome_social": "cliente teste",
-            "cpf": "11122233344",
+            "cpf": "13678982000",
             "email": "user@teste.com",
             "contato": "11222223333",
             "logradouro": "rua teste",
