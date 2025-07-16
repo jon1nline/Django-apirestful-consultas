@@ -4,7 +4,7 @@ from django.conf import settings
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
-from datetime import  datetime, timedelta
+from datetime import  timedelta
 from rest_framework_simplejwt.tokens import AccessToken
 from django.utils import timezone
 from django.contrib.auth import get_user_model
