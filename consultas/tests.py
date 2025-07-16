@@ -2,6 +2,7 @@ import json
 import jwt  
 from django.conf import settings  
 from django.test import TestCase
+from rest_framework import status
 from rest_framework.test import APIClient
 from datetime import  datetime, timedelta
 from rest_framework_simplejwt.tokens import AccessToken
@@ -9,7 +10,9 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from .models import AgendamentosConsultas
 from profissionais.models import Profissionais
-from clientes.models import CadastroClientes
+from clientes.models import CadastroClientes, PagamentoConsultas
+from unittest.mock import patch, MagicMock
+import json
 
 import json
 
@@ -63,14 +66,37 @@ class CadastroConsultasTestCase(TestCase):
         }
 
 
-    def test_criar_consulta_sucesso(self):
+    @patch('consultas.views.CadastroConsultas.registrar_pagamento_no_asaas')
+    def test_criar_consulta_sucesso(self, mock_registrar):
+        """Testa criação de consulta com sucesso e verifica integração com Asaas"""
+        # Configura o mock para retornar um valor simulado
+        mock_registrar.return_value = MagicMock()
+        
         response = self.client.post(
             self.url,
             data=json.dumps(self.valid_payload),
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, 201)
+        
+        # Verificações básicas
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AgendamentosConsultas.objects.count(), 1)
+        
+        # Verifica se o método foi chamado uma vez
+        mock_registrar.assert_called_once()
+        
+        # Obtém o argumento com que o método foi chamado
+        args, _ = mock_registrar.call_args
+        pagamento_data = args[0]
+        
+        # Verifica se o pagamento foi criado corretamente
+        self.assertIsInstance(pagamento_data, PagamentoConsultas)
+        self.assertEqual(pagamento_data.metodo_de_pagamento, 'pix')
+        self.assertEqual(pagamento_data.preco_consulta, self.profissional.preco_consulta)
+        
+        # Verifica se a consulta foi associada corretamente
+        consulta = AgendamentosConsultas.objects.first()
+        self.assertEqual(consulta.id, pagamento_data.consulta.id)
 
     def test_criar_consulta_data_passado(self):
         payload = self.valid_payload.copy()
@@ -192,8 +218,17 @@ class EditarConsultasTestCase(TestCase):
         self.url = f'/consultas/{self.consulta.id}/'
         
         
+    @patch('clientes.views.requests.post')
+    def test_editar_consulta_com_sucesso(self,mock_asaas_post):
+        """
+        Testa se uma consulta pode ser editada com sucesso, mockando a chamada
+        de criação de cliente para o Asaas que ocorre como pré-requisito.
+        """
 
-    def test_editar_consulta_com_sucesso(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "cus_mock_123456", "object": "customer"}
+        mock_asaas_post.return_value = mock_response
 
         payload = {
             "nome_social": "string",
@@ -205,30 +240,37 @@ class EditarConsultasTestCase(TestCase):
             "complemento": "string",
             "bairro": "string",
             "cep": "string",
-            "asaas_customer_id": "string"
+            "asaas_customer_id": None
         }
-        response = self.client.post(
-            '/clients/cadastro/',
-            data=json.dumps(payload),
-            content_type='application/json'
+        response_create = self.client.post(
+        '/clients/cadastro/', # URL de criação de cliente
+        data=json.dumps(payload),
+        content_type='application/json'
         )
-        self.assertEqual(response.status_code, 201) #confirma que o novo cliente foi criado.
-        new_client_id = response.json()['id']
-        
+        self.assertEqual(response_create.status_code, 201) # Confirma que o novo cliente foi criado
+        new_client_id = response_create.json()['id']
+
+        # ETAPA B: Editar a consulta para associar o novo cliente
+        # Esta é a lógica principal do seu teste, que permanece a mesma.
         update_payload = {
-        'cliente': new_client_id  
-    }
-        response = self.client.patch(
-            self.url,
+            'cliente': new_client_id
+        }
+        response_patch = self.client.patch(
+            self.url, # URL de edição da consulta
             data=json.dumps(update_payload),
             content_type='application/json'
         )
-    
-        self.assertEqual(response.status_code, 200)
+
+        # ETAPA C: Verificar o resultado
+        self.assertEqual(response_patch.status_code, 200)
         self.consulta.refresh_from_db()
-    
-    # Compara se o id está igual depois da edição
+
+        # Compara se o ID do cliente na consulta foi atualizado corretamente
         self.assertEqual(self.consulta.cliente.id, new_client_id)
+
+        # Garante que o mock da criação de cliente foi chamado uma vez
+        mock_asaas_post.assert_called_once()
+    
 
     def test_editar_consulta_inexistente(self):
         url = '/api/consultas/9999/'  # ID inexistente

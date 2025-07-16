@@ -200,11 +200,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Pega a tag da ÚLTIMA release bem-sucedida (a segunda na lista, já que a primeira seria a falha se tivesse sido criada)
-          LAST_GOOD_TAG=$(gh release list --limit 2 --json tagName --jq '.[1].tagName')
+          LAST_GOOD_TAG=$(gh release list --limit 2 --json tagName --jq '.[0].tagName')
           if [ -z "$LAST_GOOD_TAG" ]; then
             echo "Nenhuma release anterior encontrada para o rollback."
             exit 1
           fi
+           echo "Última tag válida encontrada: $LAST_GOOD_TAG"
+          
           echo "tag_to_rollback=$LAST_GOOD_TAG" >> $GITHUB_ENV
 
       - name: Perform Rollback
