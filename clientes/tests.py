@@ -56,7 +56,8 @@ class CadastroClientesTests(TestCase):
         self.client.cookies['access_token'] = None 
         response = self.client.post(self.base_url, self.valid_payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
+    
+    @patch('clientes.views.asaas_token', 'mock_token_de_teste')
     @patch('clientes.views.requests.post')
     def test_cria_cliente_e_registra_no_asaas_com_sucesso(self, mock_requests_post):
         """
@@ -86,6 +87,7 @@ class CadastroClientesTests(TestCase):
         mock_requests_post.assert_called_once()
         print("\n[SUCESSO] Teste 'test_cria_cliente_e_registra_no_asaas_com_sucesso' passou.")
 
+    @patch('clientes.views.asaas_token', 'mock_token_de_teste')
     @patch('clientes.views.requests.post')
     def test_cria_cliente_localmente_mesmo_com_falha_no_asaas(self, mock_requests_post):
         """

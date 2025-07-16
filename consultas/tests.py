@@ -217,7 +217,7 @@ class EditarConsultasTestCase(TestCase):
         )
         self.url = f'/consultas/{self.consulta.id}/'
         
-        
+    @patch('clientes.views.asaas_token', 'mock_token_de_teste')    
     @patch('clientes.views.requests.post')
     def test_editar_consulta_com_sucesso(self,mock_asaas_post):
         """
